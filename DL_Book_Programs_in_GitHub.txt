@@ -1,5 +1,4 @@
-   
-                                                            DL Book Programs in GitHub
+# DL Book Programs in GitHub
 # Example 1.1
 import numpy as np
 x = [1,2,3,4,5]
@@ -4795,6 +4794,7 @@ image = pipe("A llama drinking boba tea",
                       guidance_scale = 7.5).images[0]
 
 display(image)
+
 
 
 
