@@ -1,0 +1,4804 @@
+   
+                                                            DL Book Programs in GitHub
+# Example 1.1
+import numpy as np
+x = [1,2,3,4,5]
+y = [3,5,7,9,11]
+n = len(x)
+sumx = sumy = sumxx = sumxy = 0
+for i in range(0,n):
+  sumx = sumx + x[i]
+  sumy = sumy + y[i]
+  sumxx = sumxx + x[i] * x[i]
+  sumxy = sumxy + x[i] * y[i]
+
+W = (n * sumxy - sumx * sumy)/(n*sumxx - sumx * sumx)
+B = (sumy - W * sumx)/n
+print(f"Fitted Equation is: Y = {W}X + {B}")
+
+# Predict y when x = 6
+predicted_value = W * 6 + B
+print(f"Value of Y when X = 6 is  {predicted_value}")
+
+# Example 1.2
+# Import Libraries
+import tensorflow as tf
+import numpy as np
+from keras import Sequential
+from keras.layers import Dense
+
+# Specify Data
+xs = np.array([1, 2, 3, 4, 5])
+ys = np.array([3, 5, 7, 9, 11])
+
+# Figure out the Mapping Function
+layer_0 = Dense(units=1, input_shape=[1])
+model = Sequential([layer_0])
+#model = Sequential(Dense(units=1, input_shape=[1]))
+model.compile(optimizer='sgd', loss='mean_squared_error')
+model.fit(xs, ys, epochs = 1000)
+
+# Predict the value of y when x = 6
+print(model.predict(np.array([6.0])))
+print("Values of W and B are: {}".format(layer_0.get_weights()))
+
+# Display the Regression Equation
+parameters = layer_0.get_weights()
+W = np.round(parameters[0][0][0])
+B = np.round(parameters[1][0])
+print(f"Fitted Equation is: Y = {W}X + {B}")
+
+#Example 2.1 [ Classification]
+
+# Import Libraries
+import pandas as pd
+import numpy as np
+import sklearn
+import tensorflow as tf
+from sklearn.datasets import make_classification
+from keras.optimizers import Adam
+from keras.layers import Dense
+from keras.models import Sequential
+
+# Import the dataset
+data=make_classification(200,4,random_state=1)
+data
+
+x=data[0]
+y=data[1]
+
+# Create Model 
+model = Sequential([
+  Dense(1135,activation='tanh',input_dim=4),
+  Dense(625,activation='relu'),
+  Dense(114,activation='relu'),
+  Dense(1,activation='sigmoid')
+  ])
+# Model compilation
+adam=Adam(0.001)
+model.compile(optimizer=adam,loss='binary_crossentropy',metrics=['accuracy'])
+print(model.summary())
+
+history=model.fit(x,y,epochs=150,batch_size=5,validation_split=0.2)
+df1 = pd.DataFrame(model.history.history)
+df2 = df1.reset_index()
+df2.plot('index',kind='line')
+
+df1.loc[data["accuracy"].idxmax()]
+
+#Example 2.2 [ Regression]
+# Import Libraries
+import pandas as pd
+import numpy as np
+import sklearn
+import tensorflow as tf
+from sklearn.datasets import make_regression
+from keras.optimizers import Adam
+from keras.layers import Dense
+from keras.models import Sequential
+
+# Importing the dataset
+data=make_regression(200,4,random_state=1)
+data
+
+x=data[0]
+y=data[1]
+
+from keras import backend as K 
+import tensorflow as tf 
+from tensorflow.keras.backend import sum,mean, square, epsilon
+
+# define r2 function
+def r2(y_true, y_pred):
+    ss_res = sum(square(y_true - y_pred)) 
+    ss_tot = sum(square(y_true - mean(y_true))) 
+    return (1 - ss_res / (ss_tot + epsilon()))
+
+# Model Creation
+model = Sequential([
+  Dense(1135,activation='tanh',input_dim=4),
+  Dense(625,activation='relu'),
+  Dense(114,activation='relu'),
+  Dense(1,activation='sigmoid')
+  ])
+adam=Adam(0.0001)
+
+# Model Compilation
+
+model.compile(optimizer=adam,loss='mean_squared_error',metrics=[r2])
+print(model.summary())
+
+history=model.fit(x,y,epochs=150,batch_size=5,validation_split=0.2)
+
+#pd.DataFrame(model.history.history)[['r2','val_r2']].reset_index().plot('index',kind='line')
+
+#pd.DataFrame(model.history.history).reset_index().plot('index',kind='line')
+df1 = pd.DataFrame(model.history.history)
+df2 = df1.reset_index()
+df2.plot('index',kind='line')
+
+#pd.DataFrame(model.history.history)[["r2","val_r2"]].reset_index().plot('index',kind='line')
+df3 = pd.DataFrame(model.history.history)
+df4 = df3[["r2","val_r2"]]
+df5 = df4.reset_index()
+df5.plot('index',kind='line')
+
+df3.loc[df3["r2"].idxmax()]
+
+#Example 4.1 - ANN Model]  [mnist dataset]
+
+# Import Libraries
+import tensorflow as tf
+from keras.models import Sequential
+from keras.layers import Flatten, Dense
+from keras. datasets import mnist
+
+# Load Data
+(training_images, training_labels), (test_images, test_labels) = mnist.load_data()
+
+# Displaying training_images[0]
+import pylab as plt
+plt.imshow(training_images[7:8].reshape(28,28), cmap = 'gray') # Changed 'grey' to 'gray'
+plt.show()
+
+# Do Scaling
+training_images  = training_images / 255.0
+test_images = test_images / 255.0
+training_images.shape
+test_images.shape
+
+# Build ANN Model
+model = Sequential(
+[Flatten(input_shape=(28,28)),
+ Dense(128, activation="relu"),
+ Dense(10, activation="softmax")])
+
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+# Fit the Model
+history = model.fit(training_images, training_labels, epochs=5,batch_size=128)
+
+# Evaluate the Model
+model.evaluate(test_images, test_labels)
+
+# Do Prediction
+classifications = model.predict(test_images)
+print(classifications[0])
+print(test_labels[0])
+
+
+#Example 4.2
+# Import Datasets
+import tensorflow as tf
+from keras.models import Sequential
+from keras.layers import Flatten, Dense
+from keras. datasets import mnist
+
+class myCallback(tf.keras.callbacks.Callback):
+  def on_epoch_end(self, epoch, logs={}):
+    if(logs.get('accuracy')>0.99):
+      print("\nReached 99% accuracy so cancelling training!")
+      self.model.stop_training = True
+
+callbacks = myCallback()
+(training_images, training_labels), (test_images, test_labels) = mnist.load_data()
+training_images=training_images/255.0
+test_images=test_images/255.0
+model = Sequential([
+  Flatten(),
+  Dense(128, activation=tf.nn.relu),
+  Dense(10, activation=tf.nn.softmax)
+])
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+model.fit(training_images, training_labels, epochs=10, callbacks=[callbacks])
+
+model.evaluate(test_images, test_labels)
+
+classifications = model.predict(test_images)
+print(classifications[0])
+
+print(test_labels[0])
+
+#Example 5.1 [ Fashion Mnist dataset - ANN ]
+
+from keras.models import Sequential
+from keras.layers import Flatten, Dense
+from keras.datasets import fashion_mnist
+
+(training_images, training_labels), (test_images, test_labels) = fashion_mnist.load_data()
+
+# Displaying training_images[0]
+import pylab as plt
+plt.imshow(training_images[0:1].reshape(28,28), cmap = 'gray') # Changed 'grey' to 'gray'
+plt.show()
+
+training_images  = training_images / 255.0
+test_images = test_images / 255.0
+
+model = Sequential([Flatten(input_shape=(28,28)),
+                    Dense(128, activation="relu"),
+                    Dense(10, activation="softmax")])
+adam=Adam(0.0001)
+
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+model.fit(training_images, training_labels, epochs=5, batch_size = 128)
+
+model.evaluate(test_images, test_labels)
+
+classifications = model.predict(test_images)
+print(classifications[0])
+print(test_labels[0])
+
+
+# Example 5.2 [ Fashion Mnist dataset - CNN ]
+
+import tensorflow as tf
+from keras.models import Sequential
+from keras.layers import Flatten, Dense, Conv2D, MaxPooling2D
+from keras.datasets import fashion_mnist
+
+(training_images, training_labels), (test_images, test_labels) = fashion_mnist.load_data()
+
+training_images=training_images.reshape(60000, 28, 28, 1)
+training_images  = training_images / 255.0
+test_images = test_images.reshape(10000, 28, 28, 1)
+test_images = test_images / 255.0
+
+model = Sequential([
+    Conv2D(64, (3, 3), activation='relu', input_shape=(28, 28, 1)),
+    MaxPooling2D(2, 2),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D(2,2),
+    Flatten(),
+    Dense(128, activation="relu"),
+    Dense(10, activation="softmax")])
+
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+model.summary()
+
+model.fit(training_images, training_labels, epochs=5, batch_size = 128)
+
+model.evaluate(test_images, test_labels)
+
+classifications = model.predict(test_images)
+
+
+# Displaying test_images[0]
+import pylab as plt
+plt.imshow(test_images[0:1].reshape(28,28), cmap = 'gray')
+plt.show()
+
+# Displaying predicted value
+print(classifications[0])
+print(test_labels[0])
+
+#Example 6.1(Dogs vs Cats - Untitled15.ipynb hoddatascience)
+
+from google.colab import files
+files.upload()
+
+!pip install kaggle
+!mkdir ~/.kaggle
+!cp kaggle.json ~/.kaggle/
+!chmod 600 ~/.kaggle/kaggle.json
+!kaggle competitions download -c dogs-vs-cats
+
+!unzip -qq dogs-vs-cats.zip
+
+!unzip -qq train.zip
+
+!unzip -qq test1.zip
+
+import os, shutil, pathlib
+from keras.utils import image_dataset_from_directory
+
+original_dir = pathlib.Path("train")
+new_base_dir = pathlib.Path("cats_vs_dogs_small")
+
+def make_subset(subset_name, start_index, end_index):
+    for category in ("cat", "dog"):
+        dir = new_base_dir / subset_name / category
+        os.makedirs(dir, exist_ok = True)
+        fnames = [f"{category}.{i}.jpg" for i in range(start_index, end_index)]
+        for fname in fnames:
+            shutil.copyfile(src=original_dir / fname,
+                            dst=dir / fname)
+
+make_subset("train", start_index=0, end_index=1000)
+make_subset("validation", start_index=1000, end_index=1500)
+make_subset("test", start_index=1500, end_index=2500)
+
+train_dataset = image_dataset_from_directory(
+    new_base_dir / "train",
+    image_size=(180, 180),
+    batch_size=32)
+validation_dataset = image_dataset_from_directory(
+   new_base_dir / "validation",
+   image_size=(180, 180),
+   batch_size=32)
+test_dataset = image_dataset_from_directory(
+   new_base_dir / "test",
+   image_size=(180, 180),
+   batch_size=32)
+
+import tensorflow as tf
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+
+model = Sequential([
+    # Note the input shape is the desired size of the image 180x180 with 3 bytes color
+    # This is the first convolution
+    Conv2D(16, (3,3), activation='relu', input_shape=(180, 180, 3)),
+    MaxPooling2D(2, 2),
+    # The second convolution
+    Conv2D(32, (3,3), activation='relu'),
+    MaxPooling2D(2,2),
+    # The third convolution
+    Conv2D(64, (3,3), activation='relu'),
+    MaxPooling2D(2,2),
+    # The fourth convolution
+    Conv2D(64, (3,3), activation='relu'),
+    MaxPooling2D(2,2),
+    # Flatten the results to feed into a DNN
+    Flatten(),
+    # 512 neuron hidden layer
+    Dense(512, activation='relu'),
+    # Only 1 output neuron. It will contain a value from 0-1 where 0 for 1 class ('horses') and 1 for the other ('humans')
+    Dense(1, activation='sigmoid')
+])
+model.summary()
+
+from keras.optimizers import RMSprop
+
+model.compile(loss='binary_crossentropy',
+              optimizer=RMSprop(learning_rate=0.001),
+              metrics=['acc'])
+history = model.fit(
+      train_dataset, 
+      validation_data = validation_dataset,    
+      epochs=15,
+      verbose=1
+      )
+
+import numpy as np
+from google.colab import files
+from keras.preprocessing import image
+from keras.utils import load_img, img_to_array
+uploaded = files.upload()
+for fn in uploaded.keys():
+ 
+  # predicting images
+  path = '/content/' + fn
+  img = load_img(path, target_size=(180, 180))
+  #img = tf.keras.utils.img_to_array(path, target_size=(180, 180))
+  #img = tf.keras.utils.load_img(path, target_size=(180, 180))
+  x = img_to_array(img)
+  #x = image.img_to_array(img)
+  x = np.expand_dims(x, axis=0)
+
+  image_tensor = np.vstack([x])
+  classes = model.predict(image_tensor)
+  print(classes)
+  print(classes[0])
+  if classes[0]>0.5:
+    print(fn + " is a cat")
+  else:
+    print(fn + " is a dog")
+
+# Visualize Accuracy & Loss
+import matplotlib.pyplot as plt
+def plot_graphs(history, string):
+  plt.plot(history.history[string])
+  plt.plot(history.history['val_'+string])
+  plt.xlabel("Epochs")
+  plt.ylabel(string)
+  plt.legend([string, 'val_'+string])
+  plt.show()
+
+plot_graphs(history, "acc")
+plot_graphs(history, "loss")
+
+#Example 6.2(Dogs vs Cats - Untitled15.ipynb hoddatascience)
+
+# DATA AUGMENTATION
+import keras
+from keras import Sequential
+from keras.layers import  RandomFlip, RandomRotation, RandomZoom
+data_augmentation = Sequential(
+    [
+        RandomFlip("horizontal"),
+        RandomRotation(0.1),
+        RandomZoom(0.2)
+    ]
+)
+
+from matplotlib import pyplot as plt
+plt.figure(figsize=(10, 10))
+for images, _ in train_dataset.take(1):
+    for i in range(9):
+        augmented_images = data_augmentation(images)
+        ax = plt.subplot(3, 3, i + 1)
+        plt.imshow(augmented_images[0].numpy().astype("uint8"))
+        plt.axis("off")
+
+from keras.layers import Rescaling, Conv2D, MaxPooling2D, Flatten, Dense
+inputs = keras.Input(shape=(180, 180, 3))
+x = data_augmentation(inputs)
+x = Rescaling(1./255)(x)
+x = Conv2D(32, kernel_size=3, activation="relu")(x)
+x = MaxPooling2D(pool_size=2)(x)
+x = Conv2D(64, kernel_size=3, activation="relu")(x)
+x = MaxPooling2D(pool_size=2)(x)
+x = Conv2D(128, kernel_size=3, activation="relu")(x)
+x = MaxPooling2D(pool_size=2)(x)
+x = Conv2D(256, kernel_size=3, activation="relu")(x)
+x = MaxPooling2D(pool_size=2)(x)
+x = Conv2D(256, kernel_size=3, activation="relu")(x)
+x = Flatten()(x)
+# x = layers.Dropout(0.5)(x)
+outputs = Dense(1, activation="sigmoid")(x)
+model = keras.Model(inputs=inputs, outputs=outputs)
+
+model.compile(loss="binary_crossentropy",
+              optimizer="rmsprop",
+              metrics=["accuracy"])
+
+callbacks = [
+    keras.callbacks.ModelCheckpoint(
+        filepath="convnet_from_scratch_with_augmentation.keras",
+        save_best_only=True,
+        monitor="val_loss")
+]
+history = model.fit(
+    train_dataset,
+    epochs=5,
+    validation_data=validation_dataset,
+    callbacks=callbacks)
+
+test_model = keras.models.load_model(
+    "convnet_from_scratch_with_augmentation.keras")
+test_loss, test_acc = test_model.evaluate(test_dataset)
+print(f"Test accuracy: {test_acc:.3f}")
+
+import numpy as np
+from google.colab import files
+from keras.preprocessing import image
+from keras.utils import load_img, img_to_array
+uploaded = files.upload()
+for fn in uploaded.keys():
+
+  # predicting images
+  path = '/content/' + fn
+  img = load_img(path, target_size=(180, 180))
+  #img = tf.keras.utils.img_to_array(path, target_size=(180, 180))
+  #img = tf.keras.utils.load_img(path, target_size=(180, 180))
+  x = img_to_array(img)
+  #x = image.img_to_array(img)
+  x = np.expand_dims(x, axis=0)
+
+  image_tensor = np.vstack([x])
+  classes = model.predict(image_tensor)
+  print(classes)
+  print(classes[0])
+  if classes[0]>0.5:
+    print(fn + " is a cat")
+  else:
+    print(fn + " is a dog")
+
+#Example 6.3(Dogs vs Cats - Untitled15.ipynb hoddatascience)
+
+# Transfer Learning
+conv_base  = keras.applications.vgg16.VGG16(
+    weights="imagenet",
+    include_top=False)
+conv_base.trainable = False
+
+from keras import Sequential
+from keras.layers import  RandomFlip, RandomRotation, RandomZoom
+data_augmentation = Sequential(
+    [
+        RandomFlip("horizontal"),
+        RandomRotation(0.1),
+        RandomZoom(0.2)
+    ]
+)
+
+from keras.layers import Rescaling, Conv2D, MaxPooling2D, Flatten, Dense
+inputs = keras.Input(shape=(180, 180, 3))
+x = data_augmentation(inputs)
+x = keras.applications.vgg16.preprocess_input(x)
+x = conv_base(x)
+x = Flatten()(x)
+x = Dense(256)(x)
+# x = Dropout(0.5)(x)
+outputs = Dense(1, activation="sigmoid")(x)
+model = keras.Model(inputs, outputs)
+model.compile(loss="binary_crossentropy",
+              optimizer="rmsprop",
+              metrics=["accuracy"])
+
+#callbacks = [
+#    keras.callbacks.ModelCheckpoint(
+#       filepath="feature_extraction_with_data_augmentation.keras",
+#        save_best_only=True,
+#        monitor="val_loss")
+#]
+#history = model.fit(
+#    train_dataset,
+#    epochs=1,
+#    validation_data=validation_dataset,
+#    callbacks=callbacks)
+history = model.fit(
+    train_dataset,
+    epochs=5,
+    validation_data=validation_dataset
+    )
+
+test_loss, test_acc = model.evaluate(test_dataset)
+print(f"Test accuracy: {test_acc:.3f}")
+
+
+import numpy as np
+from google.colab import files
+from keras.preprocessing import image
+from keras.utils import load_img, img_to_array
+uploaded = files.upload()
+for fn in uploaded.keys():
+ 
+  # predicting images
+  path = '/content/' + fn
+  img = load_img(path, target_size=(180, 180))
+  #img = tf.keras.utils.img_to_array(path, target_size=(180, 180))
+  #img = tf.keras.utils.load_img(path, target_size=(180, 180))
+  x = img_to_array(img)
+  #x = image.img_to_array(img)
+  x = np.expand_dims(x, axis=0)
+
+  image_tensor = np.vstack([x])
+  classes = model.predict(image_tensor)
+  print(classes)
+  print(classes[0])
+  if classes[0]>0.5:
+    print(fn + " is a cat")
+  else:
+    print(fn + " is a dog")
+
+#Example 6.4 [ CIFAR10 dataset]
+
+import keras
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Conv2D, MaxPooling2D
+import numpy as np
+from keras.utils import to_categorical
+from keras.losses import categorical_crossentropy
+from keras.optimizers import Adadelta
+
+batch_size = 64
+num_classes = 10
+epochs = 60
+img_rows, img_cols = 32, 32
+
+from keras.datasets import cifar10
+(x_train,y_train),(x_test,y_test)= cifar10.load_data()
+
+idx = np.argsort(np.random.random(y_train.shape[0]))
+x_train = x_train[idx]
+y_train = y_train[idx]
+idx = np.argsort(np.random.random(y_test.shape[0]))
+x_test = x_test[idx]
+y_test = y_test[idx]
+
+x_train = x_train.reshape(x_train.shape[0], 32, 32, 3)
+x_test = x_test.reshape(x_test.shape[0], 32, 32, 3)
+
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
+x_train /= 255
+x_test /= 255
+
+y_train = to_categorical(y_train, 10)
+y_test =  to_categorical(y_test, 10)
+
+# CHANGE CODE TO OUR USUAL PATTERN
+model = Sequential([   
+
+          Conv2D(32, kernel_size=(3, 3),
+                 activation='relu',
+                 input_shape=(32,32,3)),
+          Conv2D(64, (3, 3), activation='relu'),
+          Conv2D(64, (3, 3), activation='relu'),
+          Conv2D(64, (3, 3), activation='relu'),
+          Conv2D(64, (3, 3), activation='relu'),
+          MaxPooling2D(2, 2),
+          Flatten(),
+          Dense(128, activation='relu'),
+          Dropout(0.5),
+          Dense(128, activation='relu'),
+          Dropout(0.5),
+          Dense(10, activation='softmax')
+])
+
+model.compile(loss = categorical_crossentropy,
+              optimizer= Adadelta(),
+              metrics=['accuracy'])
+
+print("Model parameters = %d" % model.count_params())
+print(model.summary())
+
+history = model.fit(x_train, y_train,
+          batch_size=64,
+          epochs=5,
+          verbose=1,
+          validation_data=(x_test[:1000], y_test[:1000]))
+
+score = model.evaluate(x_test[1000:], y_test[1000:], verbose=0)
+print('Test loss:', score[0])
+print('Test accuracy:', score[1])
+
+# Visualize Accuracy & Loss
+import matplotlib.pyplot as plt
+def plot_graphs(history, string):
+  plt.plot(history.history[string])
+  plt.plot(history.history['val_'+string])
+  plt.xlabel("Epochs")
+  plt.ylabel(string)
+  plt.legend([string, 'val_'+string])
+  plt.show()
+
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")(Dogs vs Cats - Untitled15.ipynb hoddatascience)
+
+# Transfer Learning
+conv_base  = keras.applications.vgg16.VGG16(
+    weights="imagenet",
+    include_top=False)
+conv_base.trainable = False
+
+from keras import Sequential
+from keras.layers import  RandomFlip, RandomRotation, RandomZoom
+data_augmentation = Sequential(
+    [
+        RandomFlip("horizontal"),
+        RandomRotation(0.1),
+        RandomZoom(0.2)
+    ]
+)
+
+from keras.layers import Rescaling, Conv2D, MaxPooling2D, Flatten, Dense
+inputs = keras.Input(shape=(180, 180, 3))
+x = data_augmentation(inputs)
+x = keras.applications.vgg16.preprocess_input(x)
+x = conv_base(x)
+x = Flatten()(x)
+x = Dense(256)(x)
+# x = Dropout(0.5)(x)
+outputs = Dense(1, activation="sigmoid")(x)
+model = keras.Model(inputs, outputs)
+model.compile(loss="binary_crossentropy",
+              optimizer="rmsprop",
+              metrics=["accuracy"])
+
+#callbacks = [
+#    keras.callbacks.ModelCheckpoint(
+#       filepath="feature_extraction_with_data_augmentation.keras",
+#        save_best_only=True,
+#        monitor="val_loss")
+#]
+#history = model.fit(
+#    train_dataset,
+#    epochs=1,
+#    validation_data=validation_dataset,
+#    callbacks=callbacks)
+history = model.fit(
+    train_dataset,
+    epochs=5,
+    validation_data=validation_dataset
+    )
+
+test_loss, test_acc = model.evaluate(test_dataset)
+print(f"Test accuracy: {test_acc:.3f}")
+
+
+import numpy as np
+from google.colab import files
+from keras.preprocessing import image
+from keras.utils import load_img, img_to_array
+uploaded = files.upload()
+for fn in uploaded.keys():
+ 
+  # predicting images
+  path = '/content/' + fn
+  img = load_img(path, target_size=(180, 180))
+  #img = tf.keras.utils.img_to_array(path, target_size=(180, 180))
+  #img = tf.keras.utils.load_img(path, target_size=(180, 180))
+  x = img_to_array(img)
+  #x = image.img_to_array(img)
+  x = np.expand_dims(x, axis=0)
+
+  image_tensor = np.vstack([x])
+  classes = model.predict(image_tensor)
+  print(classes)
+  print(classes[0])
+  if classes[0]>0.5:
+    print(fn + " is a cat")
+  else:
+    print(fn + " is a dog")
+
+#Example 6.6 SIGN LANGUAGE RECOGNITION[sign_lang_recognition.ipynb]
+import os
+import cv2
+import pickle
+import numpy as np
+import seaborn as sn
+import tensorflow as tf
+from tensorflow import keras
+import matplotlib.pyplot as plt
+from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix
+from keras.layers import Conv2D, Flatten, Dense, AveragePooling2D, Dropout
+import matplotlib.pyplot as plt
+
+path = '/content/drive/MyDrive/asl dataset/asl_dataset'
+data,label = [],[]
+for root, dirs, files in os.walk(path):
+    key = os.path.basename(root)
+    for file in files:
+        full_file_path = os.path.join(root,file)
+        img = cv2.imread(full_file_path)
+        img = cv2.resize(img,(128,128))
+        img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+        data.append(img)
+        label.append(key)
+
+data = np.array(data)
+label = np.array(label)
+x_train, x_test0, y_train, y_test0 = train_test_split(data, label, test_size=0.2)
+x_test, x_val, y_test, y_val = train_test_split(x_test0, y_test0, test_size=0.5)
+print(x_train.shape)
+print(y_train.shape)
+print(x_val.shape)
+print(y_val.shape)
+print(x_test.shape)
+print(y_test.shape)
+
+# Normalization
+x_train = x_train/255.0
+x_val = x_val/255.0
+x_test = x_test/255.0
+#Encode labels from string to int
+le = preprocessing.LabelEncoder()
+labelEnc_train = le.fit_transform(y_train)
+labelEnc_test = le.fit_transform(y_test)
+labelEnc_val = le.fit_transform(y_val)
+print(x_val.shape)
+print(labelEnc_val.shape)
+
+num_classes = 36
+
+# CNN Model Definition
+model = keras.Sequential()
+
+model.add(Conv2D(32, (5,5), activation = 'relu', input_shape = (128,128,3)))
+model.add(AveragePooling2D(pool_size=(2, 2))) # Added pool_size
+
+model.add(Conv2D(64, (5,5), activation = 'relu'))
+model.add(AveragePooling2D(pool_size=(2, 2))) # Added pool_size
+
+model.add(Flatten())
+model.add(Dense(128, activation = 'relu'))
+model.add(Dropout(0.5))
+model.add(Dense(num_classes, activation = 'softmax'))
+
+model.summary()
+
+# compile the neural network
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+history = model.fit(x_train, labelEnc_train, validation_data=(x_val,labelEnc_val), epochs=6, 
+                                                                                                                                                                      batch_size=32)
+loss, accuracy = model.evaluate(x_test, labelEnc_test)
+print('Test Accuracy =', accuracy)
+
+# Plot the loss value
+plt.figure(figsize=(5,3))
+plt.plot(history.history['loss'], label='Train Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.legend()
+plt.show()
+
+# Plot the accuracy value
+plt.figure(figsize=(5,3))
+plt.plot(history.history['acc'], label='Train Accuracy')
+plt.plot(history.history['val_acc'], label='Validation Accuracy')
+plt.legend()
+plt.show()
+
+def predict_input_image_type(img):
+    image = img.reshape(-1,128,128,3)
+    prediction = mod.predict(image)[0]
+    confidences = {labels[i]: float(prediction[i]) for i in range(36)}
+    return confidences
+
+def predict_and_display(img_path):
+    # Load and display the image
+    img = cv2.imread(img_path)
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) # Convert to RGB for display
+    plt.imshow(img_rgb)
+    plt.axis('off')
+    plt.show()
+
+    # Resize image for prediction
+    img = cv2.resize(img, (128, 128))
+    # Predict the sign
+    confidences = predict_input_image_type(img)
+    predicted_class = max(confidences, key=confidences.get)
+    print("Predicted Sign:", predicted_class)
+predict_and_display('/content/drive/MyDrive/samplepic.jpeg')
+
+display_and_predict('/content/drive/MyDrive/8.jpg')
+
+
+#Example 7.1 Leaf Disease Detection
+import os
+
+def total_files(folder_path):
+    num_files = len([f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))])
+    return num_files
+
+train_files_healthy = "/content/drive/MyDrive/DATASET/Train/Train/Healthy"
+train_files_powdery = "/content/drive/MyDrive/DATASET/Train/Train/Powdery"
+train_files_rust = "/content/drive/MyDrive/DATASET/Train/Train/Rust"
+
+test_files_healthy = "/content/drive/MyDrive/DATASET/Test/Test/Healthy"
+test_files_powdery = "/content/drive/MyDrive/DATASET/Test/Test/Powdery"
+test_files_rust = "/content/drive/MyDrive/DATASET/Test/Test/Rust"
+
+valid_files_healthy = "/content/drive/MyDrive/DATASET/Validation/Validation/Healthy"
+valid_files_powdery = "/content/drive/MyDrive/DATASET/Validation/Validation/Powdery"
+valid_files_rust = "/content/drive/MyDrive/DATASET/Validation/Validation/Rust"
+
+print("Number of healthy leaf images in training set", total_files(train_files_healthy))
+print("Number of powder leaf images in training set", total_files(train_files_powdery))
+print("Number of rusty leaf images in training set", total_files(train_files_rust))
+
+print("========================================================")
+
+print("Number of healthy leaf images in test set", total_files(test_files_healthy))
+print("Number of powder leaf images in test set", total_files(test_files_powdery))
+print("Number of rusty leaf images in test set", total_files(test_files_rust))
+
+print("========================================================")
+
+print("Number of healthy leaf images in validation set", total_files(valid_files_healthy))
+print("Number of powder leaf images in validation set", total_files(valid_files_powdery))
+print("Number of rusty leaf images in validation set", total_files(valid_files_rust))
+
+from PIL import Image
+import IPython.display as display
+
+image_path = '/content/drive/MyDrive/DATASET/Train/Train/Healthy/800edef467d27c15.jpg' 
+
+with open(image_path, 'rb') as f:
+    display.display(display.Image(data=f.read(), width=500))
+image_path = '/content/drive/MyDrive/DATASET/Train/Train/Powdery/828d2f4a91754ddb.jpg'
+
+with open(image_path, 'rb') as f:
+    display.display(display.Image(data=f.read(), width=500))
+image_path = '/content/drive/MyDrive/DATASET/Train/Train/Rust/80f09587dfc7988e.jpg'
+
+with open(image_path, 'rb') as f:
+    display.display(display.Image(data=f.read(), width=500))
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+train_datagen = ImageDataGenerator(rescale=1./255, shear_range=0.2, zoom_range=0.2, 
+                                                                                                                                                       horizontal_flip=True)
+test_datagen = ImageDataGenerator(rescale=1./255)
+train_generator =   
+               train_datagen.flow_from_directory('/content/drive/MyDrive/DATASET/Train/Train',
+                                              target_size=(225, 225), batch_size=32,   class_mode='categorical')
+validation_generator =  
+                  test_datagen.flow_from_directory('/content/drive/MyDrive/DATASET/Validation
+                                                            /Validation',  target_size=(225, 225),  batch_size=32,
+                                                                                                                                     class_mode='categorical')
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+
+model = Sequential()
+model.add(Conv2D(32, (3, 3), input_shape=(225, 225, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Flatten())
+model.add(Dense(128, activation='relu'))
+model.add(Dense(3, activation='softmax'))
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.summary()
+history = model.fit(train_generator,
+                    batch_size=32,
+                    epochs=10,
+                    validation_data=validation_generator,
+                    validation_batch_size=32
+                    )
+from matplotlib import pyplot as plt
+from matplotlib.pyplot import figure
+import seaborn as sns
+sns.set_theme()
+sns.set_context("poster")
+figure(figsize=(10, 8), dpi=100)
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'val'], loc='upper left')
+plt.show()
+
+model.save("disease_disease_recognition.h5")
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
+import numpy as np
+def preprocess_image(image_path, target_size=(225, 225)):
+    img = load_img(image_path, target_size=target_size)
+    x = img_to_array(img)
+    x = x.astype('float32') / 255.
+    x = np.expand_dims(x, axis=0)
+    return x
+x =  preprocess_image('/content/drive/MyDrive/DATASET/Test/Test/Rust/
+                                                                                                                        831abdc76c05e23d.jpg')
+predictions = model.predict(x)
+predictions[0]
+
+labels = train_generator.class_indices
+labels = {v: k for k, v in labels.items()}
+labels
+ 
+predicted_label = labels[np.argmax(predictions)]
+print(predicted_label)
+
+
+#Example 7.2 Paddy Disease Detection
+!pip install kaggle
+import os
+os.environ['KAGGLE_CONFIG_DIR'] = 'kaggle'
+import os
+
+# Command to download the Kaggle dataset
+os.system('kaggle datasets download -d imbikramsaha/paddy-doctor')
+import os
+
+# List files in the current directory
+print(os.listdir())
+
+import zipfile
+# Define the correct path to your zip file
+file_path = 'paddy-doctor.zip'  # The file is in the current directory
+
+# Unzip the file to a specific destination
+with zipfile.ZipFile(file_path, 'r') as zip_ref:
+    zip_ref.extractall('paddy disease') 
+
+pip install opencv-python-headless
+pip install tensorflow
+import os
+import time
+import shutil
+import pathlib
+import itertools
+
+# import data handling tools
+import cv2
+import numpy as np
+import pandas as pd
+import seaborn as sns
+sns.set_style('darkgrid')
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, classification_report
+
+# import Deep learning Libraries
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Adam, Adamax
+from tensorflow.keras.metrics import categorical_crossentropy
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Activation,  
+                                                                                      Dropout, BatchNormalization,AveragePooling2D
+from tensorflow.keras import regularizers
+
+# Ignore Warnings
+import warnings
+warnings.filterwarnings("ignore")
+
+print ('modules loaded')
+import tensorflow as tf
+print(tf.__version__)
+
+#generate data paths with labels
+def define_paths(data_dir):
+    filepaths = []
+    labels = []
+
+    folds = os.listdir(data_dir)
+    for fold in folds:
+        foldpath = os.path.join(data_dir, fold)
+        filelist = os.listdir(foldpath)
+        for file in filelist:
+            fpath = os.path.join(foldpath, file)
+            filepaths.append(fpath)
+            labels.append(fold)
+
+    return filepaths, labels
+
+# Concatenate data paths & labels into one dataframe, which will be used for fitting model 
+def define_df(files, classes):
+    Fseries = pd.Series(files, name= 'filepaths')
+    Lseries = pd.Series(classes, name='labels')
+    return pd.concat([Fseries, Lseries], axis= 1)
+
+# Split dataframe to train, valid, and test
+def split_data(data_dir):
+    # train dataframe
+    files, classes = define_paths(data_dir)
+    df = define_df(files, classes)
+    strat = df['labels']
+    train_df, dummy_df = train_test_split(df,  train_size= 0.8, shuffle= True, 
+                                                                                                                 random_state=  123, stratify= strat)
+    # valid and test dataframe
+    strat = dummy_df['labels']
+    valid_df, test_df = train_test_split(dummy_df,  train_size= 0.5, shuffle= True, 
+                                                                                                                random_state= 123, stratify= strat)
+    return train_df, valid_df, test_df
+
+def create_gens (train_df, valid_df, test_df, batch_size):
+    # Image data generator converts images into tensors.
+    # define model parameters
+    img_size = (224, 224)
+    channels = 3 # either BGR or Grayscale
+    color = 'rgb'
+    img_shape = (img_size[0], img_size[1], channels)
+
+    # Compute test data batch size and number of steps
+    ts_length = len(test_df)
+    test_batch_size = max(sorted([ts_length // n for n in range(1, ts_length + 1) if ts_length%n 
+                                                                                                                                        == 0 and ts_length/n <= 80]))
+    test_steps = ts_length // test_batch_size
+
+    # This function will be used in image data generator for data augmentation, 
+    # It  takes the image and returns it after transformation
+    def scalar(img):
+        return img
+
+    tr_gen = ImageDataGenerator(preprocessing_function= scalar, horizontal_flip= True)
+    ts_gen = ImageDataGenerator(preprocessing_function= scalar)
+
+    train_gen = tr_gen.flow_from_dataframe( train_df, x_col= 'filepaths', y_col= 'labels', 
+                                        target_size= img_size, class_mode= 'categorical',
+                                        color_mode= color, shuffle= True, batch_size= batch_size)
+
+    valid_gen = ts_gen.flow_from_dataframe( valid_df, x_col= 'filepaths', y_col= 'labels', 
+                                        target_size= img_size, class_mode= 'categorical',
+                                        color_mode= color, shuffle= True, batch_size= batch_size)
+
+  
+  # We will use custom test_batch_size, and make shuffle= false
+    test_gen = ts_gen.flow_from_dataframe( test_df, x_col= 'filepaths', y_col= 'labels', 
+                                        target_size= img_size, class_mode= 'categorical',
+                                        color_mode= color, shuffle= False, batch_size= test_batch_size)
+
+    return train_gen, valid_gen, test_gen
+def get_dataset(path, image_width=224, image_height=224, batch_size=64):
+
+    train_ds=tf.keras.utils.image_dataset_from_directory(
+                           path, validation_split=0.2, subset='training',  seed=123,
+                           image_size=(image_width, image_height),
+                          batch_size=batch_size)
+
+    val_ds=tf.keras.utils.image_dataset_from_directory(
+                           path, validation_split=0.2, subset='validation', seed=123,
+                           image_size=(image_width, image_height),
+                           batch_size=batch_size)
+    return train_ds,val_ds
+
+ print("Class names:", train_ds.class_names)
+
+# Create Model Structure
+img_size = (224, 224)
+channels = 3
+img_shape = (img_size[0], img_size[1], channels)
+class_count = len(list(train_ds.class_names)) # to define number of classes in dense layer
+# Load the pre-trained EfficientNetB4 model without the top classification layer
+base_model = tf.keras.applications.efficientnet.EfficientNetB4(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+
+# Freeze the pre-trained base model layers
+base_model.trainable = False
+
+model = Sequential([
+    base_model,
+    MaxPooling2D(),
+    Flatten(),
+    Dense(220, activation='relu'),
+    Dropout(0.25),
+    Dense(class_count, activation= 'softmax')
+])
+model.compile(optimizer='adam', loss= tf.keras.losses.sparse_categorical_crossentropy , metrics= ['accuracy'])
+model.build(input_shape=(None, img_size[0], img_size[1], channels))
+model.summary()
+
+model_cnn = tf.keras.Sequential([
+    tf.keras.layers.Rescaling(1./255),
+    tf.keras.layers.Conv2D(128, 3, activation='relu'),
+    tf.keras.layers.MaxPooling2D(),
+    tf.keras.layers.Conv2D(64, 3, activation='relu'),
+    tf.keras.layers.MaxPooling2D(),
+    tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    tf.keras.layers.MaxPooling2D(),
+    tf.keras.layers.Conv2D(16, 3, activation='relu'),
+    tf.keras.layers.MaxPooling2D(),
+    tf.keras.layers.Flatten(),
+    tf.keras.layers.Dropout(0.50),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(10,activation='softmax')
+])
+
+# model.compile(optimizer='adam', loss= 'categorical_crossentropy', metrics= ['accuracy'])
+model_cnn.compile(optimizer='adam', loss= tf.keras.losses.sparse_categorical_crossentropy , metrics= ['accuracy'])
+model_cnn.build(input_shape=(None, img_size[0], img_size[1], channels))
+model_cnn.summary()
+
+batch_size = 64   # set batch size for training
+epochs = 5   # number of all epochs in training
+history = model.fit(x= train_ds, epochs= epochs, callbacks = callbacks,
+                    validation_data= val_ds, verbose = 0)
+
+history_cnn = model_cnn.fit(x= train_ds, epochs= epochs, callbacks = callbacks,
+                    validation_data= val_ds, verbose = 0)
+
+plot_training(history)
+plot_training(history_cnn)
+train_score = model.evaluate(train_ds, steps= test_steps, verbose= 1)
+valid_score = model.evaluate(val_ds, steps= test_steps, verbose= 1)
+print("Train Loss: ", train_score[0])
+print("Train Accuracy: ", train_score[1])
+print('-' * 20)
+print("Validation Loss: ", valid_score[0])
+print("Validation Accuracy: ", valid_score[1])
+
+train_score = model_cnn.evaluate(train_ds, steps= test_steps, verbose= 1)
+valid_score = model_cnn.evaluate(val_ds, steps= test_steps, verbose= 1)
+print("Train Loss: ", train_score[0])
+print("Train Accuracy: ", train_score[1])
+print('-' * 20)
+print("Validation Loss: ", valid_score[0])
+print("Validation Accuracy: ", valid_score[1])
+
+#Example 7.3 Kidney Tumour Detection
+import os
+import sys
+from tempfile import NamedTemporaryFile
+from urllib.request import urlopen
+from urllib.parse import unquote, urlparse
+from urllib.error import HTTPError
+from zipfile import ZipFile
+import tarfile
+import shutil
+CHUNK_SIZE = 40960
+DATA_SOURCE_MAPPING = 'ct-kidney-dataset-normal-cyst-tumor-and- 
+             stone:https%3A%2F%2Fstorage.googleapis.com%2Fkaggle-data-sets%  
+             2F1686903%2F2764486%2Fbundle%2Farchive.zip%3FX-Goog-Algorithm%       
+            3DGOOG4-RSA-SHA256%26X-Goog-Credential%3Dgcp-kaggle-com%2540kaggle-     
+           161607.iam.gserviceaccount.com%252F20240827%252Fauto%252Fstorage%252
+           Fgoog4_request%26X-Goog-Date%3D20240827T041619Z%26X-Goog-Expires%         
+           3D259200%26X-Goog-SignedHeaders%3Dhost%26X-Goog-       
+           Signature%3D35e01a79a0da0fb0351a970defb
+           1ac065baf350ebfe619e76522f461e286e4d56'
+KAGGLE_INPUT_PATH='/kaggle/input'
+KAGGLE_WORKING_PATH='/kaggle/working'
+KAGGLE_SYMLINK='kaggle'
+
+!umount /kaggle/input/ 2> /dev/null
+shutil.rmtree('/kaggle/input', ignore_errors=True)
+os.makedirs(KAGGLE_INPUT_PATH, 0o777, exist_ok=True)
+os.makedirs(KAGGLE_WORKING_PATH, 0o777, exist_ok=True)
+
+try:
+  os.symlink(KAGGLE_INPUT_PATH, os.path.join("..", 'input'), target_is_directory=True)
+except FileExistsError:
+  pass
+try:
+  os.symlink(KAGGLE_WORKING_PATH, os.path.join("..", 'working'), target_is_directory=True)
+except FileExistsError:
+  pass
+
+for data_source_mapping in DATA_SOURCE_MAPPING.split(','):
+    directory, download_url_encoded = data_source_mapping.split(':')
+    download_url = unquote(download_url_encoded)
+    filename = urlparse(download_url).path
+    destination_path = os.path.join(KAGGLE_INPUT_PATH, directory)
+    try:
+        with urlopen(download_url) as fileres, NamedTemporaryFile() as tfile:
+            total_length = fileres.headers['content-length']
+            print(f'Downloading {directory}, {total_length} bytes compressed')
+            dl = 0
+            data = fileres.read(CHUNK_SIZE)
+           
+ while len(data) > 0:
+                dl += len(data)
+                tfile.write(data)
+                done = int(50 * dl / int(total_length))
+                sys.stdout.write(f"\r[{'=' * done}{' ' * (50-done)}] {dl} bytes downloaded")
+                sys.stdout.flush()
+                data = fileres.read(CHUNK_SIZE)
+            if filename.endswith('.zip'):
+              with ZipFile(tfile) as zfile:
+                zfile.extractall(destination_path)
+            else:
+              with tarfile.open(tfile.name) as tarfile:
+                tarfile.extractall(destination_path)
+            print(f'\nDownloaded and uncompressed: {directory}')
+    except HTTPError as e:
+        print(f'Failed to load (likely expired) {download_url} to path {destination_path}')
+        continue
+    except OSError as e:
+        print(f'Failed to load {download_url} to path {destination_path}')
+        continue
+
+print('Data source import complete.')
+
+import os
+import time
+import shutil
+import pathlib
+import itertools
+from PIL import Image
+import cv2
+import numpy as np
+import pandas as pd
+import seaborn as sns
+sns.set_style('darkgrid')
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, classification_report
+
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Adam, Adamax
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Activation, Dropout, BatchNormalization
+from tensorflow.keras import regularizers
+
+import warnings
+warnings.filterwarnings("ignore")
+
+# Create DataFrame with Images and Labels
+data_path = "/kaggle/input/ct-kidney-dataset-normal-cyst-tumor-and-stone/CT-KIDNEY-              
+           DATASET-Normal-Cyst-Tumor-Stone/CT-KIDNEY-DATASET-Normal-Cyst-Tumor-Stone"
+
+images = []
+labels = []
+
+for subfolder in os.listdir(data_path):
+
+    subfolder_path = os.path.join(data_path, subfolder)
+    if not os.path.isdir(subfolder_path):
+        continue
+
+    for image_filename in os.listdir(subfolder_path):
+        image_path = os.path.join(subfolder_path, image_filename)
+        images.append(image_path)
+
+        labels.append(subfolder)
+
+data = pd.DataFrame({'image': images, 'label': labels})
+data.head(10)
+
+data.shape
+
+strat = data['label']
+train_df, dummy_df = train_test_split(data,  train_size= 0.80, shuffle= True, 
+                                                                                                                       random_state= 123, stratify= strat)
+strat = dummy_df['label']
+valid_df, test_df = train_test_split(dummy_df,  train_size= 0.5, shuffle= True, 
+                                                                                                                       random_state= 123, stratify= strat)
+print("Training set shape:", train_df.shape)
+print("Validation set shape:", valid_df.shape)
+print("Test set shape:", test_df.shape)
+
+batch_size = 32
+img_size = (224, 224)
+channels = 3
+img_shape = (img_size[0], img_size[1], channels)
+tr_gen = ImageDataGenerator()
+ts_gen = ImageDataGenerator()
+train_gen = tr_gen.flow_from_dataframe(train_df, x_col='image', y_col='label',  
+                          target_size=img_size, class_mode='categorical', color_mode='rgb', 
+                          shuffle=True, batch_size=batch_size)
+
+valid_gen = ts_gen.flow_from_dataframe(valid_df, x_col='image',
+                          y_col='label', target_size=img_size, class_mode='categorical', 
+                          color_mode='rgb', shuffle=True, batch_size=batch_size)
+
+test_gen = ts_gen.flow_from_dataframe(test_df, x_col='image',
+                        y_col='label', target_size=img_size, class_mode='categorical', 
+                        color_mode='rgb', shuffle=False, batch_size=batch_size)
+
+print(train_gen.class_indices)
+print(test_gen.class_indices)
+print(valid_gen.class_indices)
+
+g_dict = train_gen.class_indices
+classes = list(g_dict.keys())
+images, labels = next(train_gen)
+
+plt.figure(figsize= (12, 12))
+
+for i in range(16):
+    plt.subplot(4, 4, i + 1)
+    image = images[i] / 255
+    plt.imshow(image)
+    index = np.argmax(labels[i])
+    class_name = classes[index]
+    plt.title(class_name, color= 'blue', fontsize= 10)
+    plt.axis('off')
+plt.show()
+
+# CNN Model
+n_classes = 4
+input_shape = (224, 224, 3)
+
+model = Sequential()
+
+model.add(Conv2D(32, (3,3), activation='relu', input_shape=input_shape))
+model.add(MaxPooling2D(2))
+model.add(Dropout(0.2))
+
+model.add(Conv2D(64, (3,3), activation='relu'))
+model.add(MaxPooling2D(2))
+model.add(Dropout(0.3))
+
+model.add(Conv2D(128, (3,3), activation='relu'))
+model.add(MaxPooling2D(2))
+model.add(Dropout(0.4))
+
+model.add(Conv2D(256, (3,3), activation='relu'))
+model.add(MaxPooling2D(2))
+model.add(Dropout(0.5))
+
+model.add(Conv2D(512, (3,3), activation='relu'))
+model.add(MaxPooling2D(2))
+model.add(Dropout(0.5))
+
+model.add(Conv2D(1024, (3,3), activation='relu'))
+model.add(MaxPooling2D(2))
+model.add(Dropout(0.5))
+
+model.add(Flatten())
+
+model.add(Dense(64, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
+model.add(Dense(32, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
+
+model.add(Dense(n_classes, activation='softmax'))
+
+model.summary()
+
+import tensorflow as tf
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+
+class myCallback(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs={}):
+        if(logs.get('val_accuracy') > 0.99):
+            print("\nReached 99% accuracy so cancelling training!")
+            self.model.stop_training = True
+
+callbacks = myCallback()
+
+model.compile(optimizer=Adamax(learning_rate=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
+
+history = model.fit(
+    train_gen,
+    epochs=200,
+    batch_size=32,
+    verbose=1,
+    validation_data=valid_gen,
+    callbacks=[callbacks]
+)
+
+tr_acc = history.history['accuracy']
+tr_loss = history.history['loss']
+val_acc = history.history['val_accuracy']
+val_loss = history.history['val_loss']
+index_loss = np.argmin(val_loss)
+val_lowest = val_loss[index_loss]
+index_acc = np.argmax(val_acc)
+acc_highest = val_acc[index_acc]
+Epochs = [i+1 for i in range(len(tr_acc))]
+loss_label = f'best epoch= {str(index_loss + 1)}'
+acc_label = f'best epoch= {str(index_acc + 1)}'
+
+plt.figure(figsize= (20, 8))
+plt.style.use('fivethirtyeight')
+
+plt.subplot(1, 2, 1)
+plt.plot(Epochs, tr_loss, 'r', label= 'Training loss')
+plt.plot(Epochs, val_loss, 'g', label= 'Validation loss')
+plt.scatter(index_loss + 1, val_lowest, s= 150, c= 'blue', label= loss_label)
+plt.title('Training and Validation Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(Epochs, tr_acc, 'r', label= 'Training Accuracy')
+plt.plot(Epochs, val_acc, 'g', label= 'Validation Accuracy')
+plt.scatter(index_acc + 1 , acc_highest, s= 150, c= 'blue', label= acc_label)
+plt.title('Training and Validation Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+
+plt.tight_layout
+
+plt.savefig('training_validation_plots.png')
+plt.show()
+
+model.save('model2.h5')
+import cv2
+import numpy as np
+from tensorflow.keras.models import load_model
+import matplotlib.pyplot as plt
+
+# Load the trained model
+model_path = '/content/model2.h5'  # Replace with your model's path
+model = load_model(model_path)
+
+# Dictionary to map model output to class names
+class_names = {0: 'Cyst', 1: 'Normal', 2: 'Stone', 3: 'Tumor'}  # Adjust based on your class labels
+
+def detect_kidney_condition(image_path):
+    # Step 1: Load the image
+    image = cv2.imread(image_path)
+
+    if image is None:
+        raise ValueError(f"Image not found or cannot be loaded at the path: {image_path}")
+
+    original_image = image.copy()
+
+    # Step 2: Preprocess the image
+    image = cv2.resize(image, (224, 224))  # Resize to the input size expected by the model
+    image = image / 255.0  # Normalize the image
+    image = np.expand_dims(image, axis=0)  # Add batch dimension
+
+    # Step 3: Predict the class
+    predictions = model.predict(image)
+    predicted_class = np.argmax(predictions, axis=1)[0]
+    class_label = class_names[predicted_class]
+
+    # Step 4: Display the image with the prediction
+    cv2.putText(original_image, f'Prediction: {class_label}', (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    plt.imshow(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
+    plt.axis('off')
+    plt.show()
+
+# Example usage
+image_path = '/content/right-kidney-stone.jpg'  # Replace with the path to the CT scan image
+detect_kidney_condition(image_path)
+
+#Example 8.1 Classifying News headlines using RNN
+# Importing the libraries
+import pandas as pd
+import numpy as np
+from keras.datasets import reuters # a collection of documents with news articles
+from keras.utils import pad_sequences
+from keras.models import Sequential
+from keras.layers import Dense, SimpleRNN, Activation, LSTM, GRU
+import tensorflow as tf
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.utils import to_categorical
+from sklearn.metrics import accuracy_score
+
+# Initializing the values
+num_words=None
+maxlen=50
+test_split=0.3
+
+# Splitting the dataset into train and test sets
+(x_train,y_train),(x_test,y_test) = reuters.load_data(num_words = num_words, maxlen = maxlen, test_split = test_split)
+
+from numpy.core.fromnumeric import shape
+print(x_train.shape)
+print(x_test.shape)
+print(y_train.shape)
+print(y_test.shape)
+
+print(x_train[0])
+print(y_train[0])
+
+x_train=pad_sequences(x_train,padding="post")
+x_test=pad_sequences(x_test,padding="post")
+x_train = np.array(x_train).reshape((x_train.shape[0],x_train.shape[1],1))
+x_test = np.array(x_test).reshape((x_test.shape[0],x_test.shape[1],1))
+
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+
+#Simple RNN
+model = Sequential([
+    SimpleRNN(50, input_shape=(49,1)),
+    Dense(46),
+    Activation('softmax')
+    
+])  
+
+
+#Model compilation
+adam = Adam(learning_rate=0.001)
+model.compile(loss = 'categorical_crossentropy', optimizer = adam, metrics = ['accuracy'])
+model.fit(x_train,y_train, epochs = 200, validation_split=0.3)
+
+#Model Evaluation
+y_pred = np.argmax(model.predict(x_test),axis = 1)
+y_test = np.argmax(y_test, axis = 1)
+print(accuracy_score(y_pred,y_test))
+
+#LSTM Model
+model2 = Sequential([
+    LSTM(50, input_shape=(49,1)),
+    Dense(46),
+    Activation('softmax')
+    ])  
+
+#Model compilation
+adam = Adam(learning_rate = 0.001)
+model2.compile(loss = 'categorical_crossentropy', optimizer = adam, metrics = ['accuracy'])
+model2.fit(x_train,y_train, epochs = 100, validation_split=0.3)
+
+#Model Evaluation
+y_pred = np.argmax(model2.predict(x_test), axis = 1)
+print(accuracy_score(y_pred, y_test))
+
+#GRU Model
+model3 = Sequential([
+    GRU(50, input_shape=(49,1)),
+    Dense(46),
+    Activation('sigmoid')
+    ])
+
+#Model compilation
+adam = Adam(learning_rate = 0.001)
+model3.compile(loss = 'binary_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
+model3.fit(x_train,y_train, epochs = 100, validation_split = 0.3)
+
+#Model Evaluation
+y_pred = np.argmax(model3.predict(x_test), axis = 1)
+print(accuracy_score(y_pred, y_test))
+
+#Example 8.2  RNN - Spam dataset
+import numpy as np
+import pandas as pd
+import re
+import nltk
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+
+email_data = pd.read_csv("spam.csv", encoding='latin-1')
+email_data.head()
+
+#email_data = email_data.drop(["Unnamed: 2", "Unnamed: 3", "Unnamed: 4"], axis=1)
+email_data = email_data.rename(columns={"v1":'Category', 'v2':'Message'})
+email_data.head()
+
+X = email_data["Message"]
+y = email_data["Category"]
+
+# print(X[0])
+# print(y[0])
+
+def clean_text(doc):
+
+
+    document = re.sub('[^a-zA-Z]', ' ', doc)
+
+    document = re.sub(r"\s+[a-zA-Z]\s+", ' ', document)
+
+    document = re.sub(r'\s+', ' ', document)
+
+    return document
+
+X_sentences = []
+reviews = list(X)
+for rev in reviews:
+    X_sentences.append(clean_text(rev))
+
+#from nltk.corpus import stopwords
+from nltk.corpus import stopwords
+nltk.download('stopwords')
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+vectorizer = TfidfVectorizer (max_features=2000, min_df=5, max_df=0.7, stop_words=stopwords.words('english'))
+#vectorizer = TfidfVectorizer (max_features=2000, min_df=5, max_df=0.7, stop_words=stopwords)
+X= vectorizer.fit_transform(X_sentences).toarray()
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
+
+# Convert y_train to integers if it's not already
+y_train = y_train.replace('spam', 0)
+y_train = y_train.replace('ham', 1)
+
+#LSTM Model
+model = Sequential([
+    LSTM(50, input_shape=(49,1)),
+    Dense(1),
+    Activation('sigmoid')
+
+])
+
+#Model compilation
+adam = Adam(learning_rate=0.001)
+model.compile(loss = 'binary_crossentropy', optimizer = adam, metrics = ['accuracy'])
+model.fit(X_train,y_train, epochs = 10, validation_split=0.3)
+
+y_test = y_test.replace('spam', 0)
+y_test = y_test.replace('ham', 1)
+y_pred = model.predict(X_test) # Use X_test instead of x_test
+y_pred = (y_pred > 0.5).astype(int) # Convert probabilities to binary predictions
+print(accuracy_score(y_pred, y_test))
+
+
+#Example 8.3 Sentiment Analysis of IMDB Movie Reviews using RNN
+import numpy as np
+import pandas as pd
+import re
+import nltk
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+
+data_path = "https://raw.githubusercontent.com/LawrenceDuan/IMDb-Review-Analysis/master/IMDb_Reviews.csv"
+movie_dataset = pd.read_csv(data_path, engine='python')
+movie_dataset.head()
+
+X = movie_dataset["review"]
+y = movie_dataset["sentiment"]
+
+#print(X[0])
+#print(y[0])
+
+def clean_text(doc):
+
+    document = re.sub('[^a-zA-Z]', ' ', doc)
+    document = re.sub(r"\s+[a-zA-Z]\s+", ' ', document)
+    document = re.sub(r'\s+', ' ', document)
+    return document
+
+X_sentences = []
+reviews = list(X)
+for rev in reviews:
+    X_sentences.append(clean_text(rev))
+
+#from nltk.corpus import stopwords
+from nltk.corpus import stopwords
+nltk.download('stopwords')
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+vectorizer = TfidfVectorizer (max_features=2000, min_df=5, max_df=0.7, stop_words=stopwords.words('english'))
+#vectorizer = TfidfVectorizer (max_features=2000, min_df=5, max_df=0.7, stop_words=stopwords)
+X= vectorizer.fit_transform(X_sentences).toarray()
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
+
+#LSTM Model
+model = Sequential([
+    LSTM(50, input_shape=(49,1)),
+    Dense(1),
+    Activation('sigmoid')
+
+])
+
+#Model compilation
+adam = Adam(learning_rate=0.001)
+model.compile(loss = 'binary_crossentropy', optimizer = adam, metrics = ['accuracy'])
+model.fit(X_train,y_train, epochs = 20, validation_split=0.3)
+
+y_pred = model.predict(X_test) # Use X_test instead of x_test
+y_pred = (y_pred > 0.5).astype(int) # Convert probabilities to binary predictions
+print(accuracy_score(y_pred, y_test))
+
+# Example 9.1 Temperature Prediction using Statistical Moving Averages
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from keras.models import Sequential
+from keras.layers import Dense
+
+!wget https://s3.amazonaws.com/keras-datasets/jena_climate_2009_2016.csv.zip
+!unzip jena_climate_2009_2016.csv.zip
+
+import os
+fname = os.path.join("jena_climate_2009_2016.csv")
+
+def get_data():
+    f = open(fname)
+    data = f.read()
+    f.close()
+    lines = data.split('\n')
+    header = lines[0].split(',')
+    lines = lines[1:]
+    temperatures=[]
+    for line in lines:
+        if line:
+            linedata = line.split(',')
+            linedata = linedata[1:13]
+            for item in linedata:
+                if item:
+                    temperatures.append(float(item))
+
+    series = np.asarray(temperatures)
+    time = np.arange(len(temperatures), dtype="float32")
+    return time, series
+
+def plot_series(time, series, format="-", start=0, end=None):
+    plt.plot(time[start:end], series[start:end], format)
+    plt.xlabel("Time")
+    plt.ylabel("Value")
+    plt.grid(True)
+
+time, series = get_data()
+mean = series.mean(axis=0)
+series-=mean
+std = series.std(axis=0)
+series/=std
+split_time = 100000
+time_train = time[:split_time]
+x_train = series[:split_time]
+time_valid = time[split_time:]
+x_valid = series[split_time:]
+
+plt.figure(figsize=(10, 6))
+plot_series(time_train, x_train)
+
+def moving_average_forecast(series, window_size):
+  """Forecasts the mean of the last few values.
+     If window_size=1, then this is equivalent to naive forecast"""
+  forecast = []
+  for time in range(len(series) - window_size):
+    forecast.append(series[time:time + window_size].mean())
+  return np.array(forecast)
+
+moving_avg = moving_average_forecast(x_train, 144)[0:]
+
+from matplotlib import pyplot as plt
+plt.plot(range(len(moving_avg)), moving_avg)
+
+def windowed_dataset(series, window_size, batch_size, shuffle_buffer):
+  dataset = tf.data.Dataset.from_tensor_slices(series)
+  dataset = dataset.window(window_size + 1, shift=1, drop_remainder=True)
+  dataset = dataset.flat_map(lambda window: window.batch(window_size + 1))
+  dataset = dataset.shuffle(shuffle_buffer).map(lambda window: (window[:-1], window[-1]))
+  dataset = dataset.batch(batch_size).prefetch(1)
+  return dataset
+
+tf.keras.backend.clear_session()
+tf.random.set_seed(42)
+np.random.seed(42)
+
+window_size = 144
+batch_size = 32
+shuffle_buffer_size = 1000
+
+dataset = windowed_dataset(x_train, window_size, batch_size, shuffle_buffer_size)
+valid_dataset = windowed_dataset(x_valid, window_size, batch_size, shuffle_buffer_size)
+
+model = Sequential([
+  Dense(100, input_shape=[None, 1], activation = 'relu'),
+  Dense(10,activation = 'relu'),
+  Dense(1)
+])
+
+optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4, momentum=0.7)
+model.compile(loss='mse', optimizer=optimizer, metrics=["mae"])
+
+history = model.fit(dataset, epochs=10,  verbose=1)
+
+print(model.predict(series[100000:100114][np.newaxis]))
+
+# Example 9.2 temperature Prediction using ANN
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from keras.models import Sequential
+from keras.layers import Conv1D, Dense
+
+!wget https://s3.amazonaws.com/keras-datasets/jena_climate_2009_2016.csv.zip
+!unzip jena_climate_2009_2016.csv.zip
+
+import os
+fname = os.path.join("jena_climate_2009_2016.csv")
+
+def get_data():
+    #data_file = "/tmp/station.csv"
+    f = open(fname)
+    data = f.read()
+    f.close()
+    lines = data.split('\n')
+    header = lines[0].split(',')
+    lines = lines[1:]
+    temperatures=[]
+    for line in lines:
+        if line:
+            linedata = line.split(',')
+            linedata = linedata[1:13]
+            for item in linedata:
+                if item:
+                    temperatures.append(float(item))
+
+    series = np.asarray(temperatures)
+    time = np.arange(len(temperatures), dtype="float32")
+    return time, series
+
+def plot_series(time, series, format="-", start=0, end=None):
+    plt.plot(time[start:end], series[start:end], format)
+    plt.xlabel("Time")
+    plt.ylabel("Value")
+    plt.grid(True)
+
+time, series = get_data()
+mean = series.mean(axis=0)
+series-=mean
+std = series.std(axis=0)
+series/=std
+split_time = 100000
+time_train = time[:split_time]
+x_train = series[:split_time]
+time_valid = time[split_time:]
+x_valid = series[split_time:]
+
+plt.figure(figsize=(10, 6))
+plot_series(time_train, x_train)
+
+def windowed_dataset(series, window_size, batch_size, shuffle_buffer):
+  series = tf.expand_dims(series, axis=-1)
+  dataset = tf.data.Dataset.from_tensor_slices(series)
+  dataset = dataset.window(window_size + 1, shift=1, drop_remainder=True)
+  dataset = dataset.flat_map(lambda window: window.batch(window_size + 1))
+  dataset = dataset.shuffle(shuffle_buffer).map(lambda window: (window[:-1], window[-1]))
+  dataset = dataset.batch(batch_size).prefetch(1)
+  return dataset
+
+tf.keras.backend.clear_session()
+tf.random.set_seed(42)
+np.random.seed(42)
+
+window_size = 144
+batch_size = 32
+shuffle_buffer_size = 1000
+
+dataset = windowed_dataset(x_train, window_size, batch_size, shuffle_buffer_size)
+valid_dataset = windowed_dataset(x_valid, window_size, batch_size, shuffle_buffer_size)
+
+model = Sequential([
+  Conv1D(filters = 128, kernel_size = 3, strides = 1,activation = "relu",input_shape=[None, 1] ),
+  Dense(28, activation = 'relu'),
+  Dense(10,activation = 'relu'),
+  Dense(1)
+])
+
+optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4, momentum=0.7)
+model.compile(loss="mse", optimizer=optimizer, metrics=["mae"])
+
+history = model.fit(dataset, epochs=10,  verbose=1)
+
+print(model.predict(series[100000:100114][np.newaxis]))
+
+# Example 9.3
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from keras.models import Sequential
+from keras.layers import SimpleRNN,LSTM, Dense
+
+!wget https://s3.amazonaws.com/keras-datasets/jena_climate_2009_2016.csv.zip
+!unzip jena_climate_2009_2016.csv.zip
+
+import os
+fname = os.path.join("jena_climate_2009_2016.csv")
+
+def get_data():
+    #data_file = "/tmp/station.csv"
+    f = open(fname)
+    data = f.read()
+    f.close()
+    lines = data.split('\n')
+    header = lines[0].split(',')
+    lines = lines[1:]
+    temperatures=[]
+    for line in lines:
+        if line:
+            linedata = line.split(',')
+            linedata = linedata[1:13]
+            for item in linedata:
+                if item:
+                    temperatures.append(float(item))
+
+    series = np.asarray(temperatures)
+    time = np.arange(len(temperatures), dtype="float32")
+    return time, series
+
+def plot_series(time, series, format="-", start=0, end=None):
+    plt.plot(time[start:end], series[start:end], format)
+    plt.xlabel("Time")
+    plt.ylabel("Value")
+    plt.grid(True)
+
+time, series = get_data()
+mean = series.mean(axis=0)
+series-=mean
+std = series.std(axis=0)
+series/=std
+split_time = 100000
+time_train = time[:split_time]
+x_train = series[:split_time]
+time_valid = time[split_time:]
+x_valid = series[split_time:]
+
+plt.figure(figsize=(10, 6))
+plot_series(time_train, x_train)
+
+def windowed_dataset(series, window_size, batch_size, shuffle_buffer):
+  series = tf.expand_dims(series, axis=-1)
+  dataset = tf.data.Dataset.from_tensor_slices(series)
+  dataset = dataset.window(window_size + 1, shift=1, drop_remainder=True)
+  dataset = dataset.flat_map(lambda window: window.batch(window_size + 1))
+  dataset = dataset.shuffle(shuffle_buffer).map(lambda window: (window[:-1], window[-1]))
+  dataset = dataset.batch(batch_size).prefetch(1)
+  return dataset
+
+tf.keras.backend.clear_session()
+tf.random.set_seed(42)
+np.random.seed(42)
+
+window_size = 144
+batch_size = 32
+shuffle_buffer_size = 1000
+
+dataset = windowed_dataset(x_train, window_size, batch_size, shuffle_buffer_size)
+valid_dataset = windowed_dataset(x_valid, window_size, batch_size, shuffle_buffer_size)
+
+model = Sequential([
+  LSTM(10, return_sequences=True, input_shape=[None, 1], activation="relu"), # Added return_sequences=True 
+  LSTM(10, activation="relu"),
+  Dense(28, activation='relu'),
+  Dense(10, activation='relu'),
+  Dense(1)
+])
+
+optimizer = tf.keras.optimizers.SGD(learning_rate=1e-4, momentum=0.7)
+model.compile(loss="mse", optimizer=optimizer, metrics=["mae"])
+
+history = model.fit(dataset, epochs=5,  verbose=1)
+
+print(model.predict(series[100000:100114][np.newaxis]))
+
+# EXAMPLE 10.1 [Building ANN for Stock Market News Sentiment Analysis - ANN , CNN ] [ Anaconda - Chap8_Example1]
+import pandas as pd
+sentiments_data = pd.read_csv("D:/2_DL_Material/DataSets/LabelledNewsData.csv",encoding = "ISO-8859-1")
+
+
+sentiments_data.head(1)
+
+# Keras package for the deep learning model for the sentiment prediction. 
+import tensorflow as tf
+from keras.preprocessing.text import Tokenizer
+
+#from keras.preprocessing.sequence import pad_sequences
+from keras_preprocessing.sequence import pad_sequences
+
+from keras.models import Sequential
+from keras.layers import Dense, Flatten, LSTM, Dropout, Activation,GlobalAveragePooling1D
+
+#from keras.layers.embeddings import Embedding
+from keras.layers import Embedding
+
+# Load libraries
+import statsmodels.api as sm
+import seaborn as sns
+import pandas as pd
+import numpy as np
+import datetime
+from datetime import date
+import matplotlib.pyplot as plt
+
+### Create sequence
+vocabulary_size = 20000
+tokenizer = Tokenizer(num_words= vocabulary_size)
+tokenizer.fit_on_texts(sentiments_data['headline'])
+sequences = tokenizer.texts_to_sequences(sentiments_data['headline'])
+X = pad_sequences(sequences, maxlen=50)
+
+
+from sklearn.model_selection import train_test_split
+validation_size = 0.3
+seed = 7
+Y = sentiments_data["sentiment"]
+X_train, X_test, Y_train, Y_test = train_test_split(X, \
+                       Y, test_size=validation_size, random_state=seed)
+
+def create_model(input_length=50):
+    model = Sequential()
+    model.add(Embedding(20000, 16, input_length=50))
+    model.add(GlobalAveragePooling1D())
+    model.add(Dense(24, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])    
+    return model 
+
+from keras.wrappers.scikit_learn import KerasClassifier
+model_ANN = KerasClassifier(build_fn=create_model, epochs=30, verbose=1, validation_split=0.4)
+
+history = model_ANN.fit(X_train, Y_train)
+
+import matplotlib.pyplot as plt
+
+
+def plot_graphs(history, string):
+  plt.plot(history.history[string])
+  plt.plot(history.history['val_'+string])
+  plt.xlabel("Epochs")
+  plt.ylabel(string)
+  plt.legend([string, 'val_'+string])
+  plt.show()
+  
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+# Reducing Learning Rate
+def create_model(input_length=50):
+    from keras.optimizers import Adam
+    model3 = Sequential()
+    model3.add(Embedding(20000, 16, input_length=50))
+    model3.add(GlobalAveragePooling1D())
+    model3.add(Dense(24, activation='relu'))
+    model3.add(Dense(1, activation='sigmoid'))
+    adam = Adam(learning_rate = 0.0001,beta_1 = .9,beta_2 = .999, amsgrad = False)
+    model3.compile(loss='binary_crossentropy', optimizer= adam, metrics=['accuracy'])    
+    return model3
+
+from keras.wrappers.scikit_learn import KerasClassifier
+model_ANN_2 = KerasClassifier(build_fn=create_model, epochs=30, verbose=1, validation_split=0.4)
+
+history = model_ANN_2.fit(X_train, Y_train)
+
+import matplotlib.pyplot as plt
+
+
+def plot_graphs(history, string):
+  plt.plot(history.history[string])
+  plt.plot(history.history['val_'+string])
+  plt.xlabel("Epochs")
+  plt.ylabel(string)
+  plt.legend([string, 'val_'+string])
+  plt.show()
+  
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+wc = tokenizer.word_counts
+print(wc)
+
+from collections import OrderedDict
+newlist = (OrderedDict(sorted(wc.items(),key=lambda t:t[1],reverse=True)))
+print(newlist)
+
+xs=[]
+ys=[]
+curr_x = 1
+for item in newlist:
+  xs.append(curr_x)
+  curr_x=curr_x+1
+  ys.append(newlist[item])
+
+print(ys)
+plt.plot(xs,ys)
+#plt.axis([300,10000,0,100])
+plt.show()
+
+plt.plot(xs,ys)
+plt.axis([300,10000,0,100])
+plt.show()
+
+### REDUCING VOCABULARY SIZE TO 2000
+vocabulary_size = 2000
+tokenizer = Tokenizer(num_words= vocabulary_size)
+tokenizer.fit_on_texts(sentiments_data['headline'])
+sequences = tokenizer.texts_to_sequences(sentiments_data['headline'])
+X = pad_sequences(sequences, maxlen=50)
+
+from sklearn.model_selection import train_test_split
+validation_size = 0.3
+seed = 7
+Y = sentiments_data["sentiment"]
+X_train, X_test, Y_train, Y_test = train_test_split(X, \
+                       Y, test_size=validation_size, random_state=seed)
+
+def create_model(input_length=50):
+    model = Sequential()
+    model.add(Embedding(2000, 16, input_length=50))
+    model.add(GlobalAveragePooling1D())
+    model.add(Dense(24, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])    
+    return model 
+
+from keras.wrappers.scikit_learn import KerasClassifier
+model_ANN = KerasClassifier(build_fn=create_model, epochs=30, verbose=1, validation_split=0.4)
+
+history = model_ANN.fit(X_train, Y_train)
+
+import matplotlib.pyplot as plt
+
+
+def plot_graphs(history, string):
+  plt.plot(history.history[string])
+  plt.plot(history.history['val_'+string])
+  plt.xlabel("Epochs")
+  plt.ylabel(string)
+  plt.legend([string, 'val_'+string])
+  plt.show()
+  
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+# REDUCING EMBEDDING DIMENTION to 7
+### Create sequence
+vocabulary_size = 20000
+tokenizer = Tokenizer(num_words= vocabulary_size)
+tokenizer.fit_on_texts(sentiments_data['headline'])
+sequences = tokenizer.texts_to_sequences(sentiments_data['headline'])
+X = pad_sequences(sequences, maxlen=50)
+
+from sklearn.model_selection import train_test_split
+validation_size = 0.3
+seed = 7
+Y = sentiments_data["sentiment"]
+X_train, X_test, Y_train, Y_test = train_test_split(X, \
+                       Y, test_size=validation_size, random_state=seed)
+
+def create_model(input_length=50):
+    model = Sequential()
+    model.add(Embedding(20000, 7, input_length=50))
+    model.add(GlobalAveragePooling1D())
+    model.add(Dense(24, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])    
+    return model
+
+from keras.wrappers.scikit_learn import KerasClassifier
+model_ANN = KerasClassifier(build_fn=create_model, epochs=30, verbose=1, validation_split=0.4)
+
+history = model_ANN.fit(X_train, Y_train)
+
+import matplotlib.pyplot as plt
+
+
+def plot_graphs(history, string):
+  plt.plot(history.history[string])
+  plt.plot(history.history['val_'+string])
+  plt.xlabel("Epochs")
+  plt.ylabel(string)
+  plt.legend([string, 'val_'+string])
+  plt.show()
+  
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+# REDUCING NUMBER OF NEURONS TO 8
+def create_model(input_length=50):
+    model = Sequential()
+    model.add(Embedding(20000, 16, input_length=50))
+    model.add(GlobalAveragePooling1D())
+    model.add(Dense(8, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])    
+    return model 
+
+from keras.wrappers.scikit_learn import KerasClassifier
+model_ANN = KerasClassifier(build_fn=create_model, epochs=30, verbose=1, validation_split=0.4)
+
+history = model_ANN.fit(X_train, Y_train)
+
+import matplotlib.pyplot as plt
+
+
+def plot_graphs(history, string):
+  plt.plot(history.history[string])
+  plt.plot(history.history['val_'+string])
+  plt.xlabel("Epochs")
+  plt.ylabel(string)
+  plt.legend([string, 'val_'+string])
+  plt.show()
+  
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+# USING DROPOUT
+def create_model(input_length=50):
+    model = Sequential()
+    model.add(Embedding(20000, 16, input_length=50))
+    model.add(GlobalAveragePooling1D())
+    model.add(Dense(8, activation='relu'))
+    Dropout(0.25)
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])    
+    return model
+
+from keras.wrappers.scikit_learn import KerasClassifier
+model_ANN = KerasClassifier(build_fn=create_model, epochs=30, verbose=1, validation_split=0.4)
+
+history = model_ANN.fit(X_train, Y_train)
+
+import matplotlib.pyplot as plt
+
+
+def plot_graphs(history, string):
+  plt.plot(history.history[string])
+  plt.plot(history.history['val_'+string])
+  plt.xlabel("Epochs")
+  plt.ylabel(string)
+  plt.legend([string, 'val_'+string])
+  plt.show()
+  
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+# USING REGULARIZATION
+from keras.regularizers import l2
+def create_model(input_length=50):
+    model = Sequential()
+    model.add(Embedding(20000, 16, input_length=50))
+    model.add(GlobalAveragePooling1D())
+    model.add(Dense(8, activation='relu',kernel_regularizer = l2(0.01))) 
+    Dropout(0.25)
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])    
+    return model
+
+from keras.wrappers.scikit_learn import KerasClassifier
+model_ANN = KerasClassifier(build_fn=create_model, epochs=30, verbose=1, validation_split=0.4)
+
+history = model_ANN.fit(X_train, Y_train)
+
+import matplotlib.pyplot as plt
+
+
+def plot_graphs(history, string):
+  plt.plot(history.history[string])
+  plt.plot(history.history['val_'+string])
+  plt.xlabel("Epochs")
+  plt.ylabel(string)
+  plt.legend([string, 'val_'+string])
+  plt.show()
+  
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+from bs4 import BeautifulSoup
+import string
+
+stopwords = ["a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "as", "at",
+             "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "could", "did", "do",
+             "does", "doing", "down", "during", "each", "few", "for", "from", "further", "had", "has", "have", "having",
+             "he", "hed", "hes", "her", "here", "heres", "hers", "herself", "him", "himself", "his", "how",
+             "hows", "i", "id", "ill", "im", "ive", "if", "in", "into", "is", "it", "its", "itself",
+             "lets", "me", "more", "most", "my", "myself", "nor", "of", "on", "once", "only", "or", "other", "ought",
+             "our", "ours", "ourselves", "out", "over", "own", "same", "she", "shed", "shell", "shes", "should",
+             "so", "some", "such", "than", "that", "thats", "the", "their", "theirs", "them", "themselves", "then",
+             "there", "theres", "these", "they", "theyd", "theyll", "theyre", "theyve", "this", "those", "through",
+             "to", "too", "under", "until", "up", "very", "was", "we", "wed", "well", "were", "weve", "were",
+             "what", "whats", "when", "whens", "where", "wheres", "which", "while", "who", "whos", "whom", "why",
+             "whys", "with", "would", "you", "youd", "youll", "youre", "youve", "your", "yours", "yourself",
+             "yourselves"]
+
+table = str.maketrans('', '', string.punctuation)
+
+#DOING PREDICTION
+# CLASSIFYING A HEADLINE
+sentences = ["Microsoft has done well in this quarter","Google has performed badly in this quarter","Amazon is struggling in this quarter"]
+sequences = tokenizer.texts_to_sequences(sentences)
+print(sequences)
+
+
+max_length = 50
+trunc_type='post'
+padding_type='post'
+
+padded = pad_sequences(sequences, maxlen=max_length, padding=padding_type, truncating=trunc_type)
+print(padded)
+
+print(model_ANN.predict(padded))
+
+
+# EXAMPLE 11.1 [Sentiment Analysis - ANN , CNN ] [ Anaconda - Chap8_Example2]
+import pandas as pd
+sentiments_data = pd.read_csv("D:/2_DL_Material/DataSets/LabelledNewsData.csv",encoding = "ISO-8859-1")
+sentiments_data.head(1)
+
+# Keras package for the deep learning model for the sentiment prediction. 
+from keras.preprocessing.text import Tokenizer
+#from keras.preprocessing.sequence import pad_sequences
+from keras_preprocessing.sequence import pad_sequences
+from keras.models import Sequential
+from keras.layers import Dense, Flatten, LSTM,Bidirectional, Dropout, Activation,GlobalAveragePooling1D
+#from keras.layers.embeddings import Embedding
+from keras.layers import Embedding
+
+# Load libraries
+import statsmodels.api as sm
+import seaborn as sns
+import pandas as pd
+import numpy as np
+import datetime
+from datetime import date
+import matplotlib.pyplot as plt
+
+### Create sequence
+vocabulary_size = 20000
+tokenizer = Tokenizer(num_words= vocabulary_size)
+tokenizer.fit_on_texts(sentiments_data['headline'])
+sequences = tokenizer.texts_to_sequences(sentiments_data['headline'])
+X = pad_sequences(sequences, maxlen=50)
+
+from sklearn.model_selection import train_test_split
+validation_size = 0.3
+seed = 7
+Y = sentiments_data["sentiment"]
+X_train, X_test, Y_train, Y_test = train_test_split(X, \
+                       Y, test_size=validation_size, random_state=seed)
+
+# Creating RNN(LSTM) Model
+def create_model(input_length=50):
+    model = Sequential()
+    model.add(Embedding(20000, 64, input_length=50))
+    #model.add(GlobalAveragePooling1D())
+    model.add(LSTM(100, dropout = 0.2, recurrent_dropout = 0.2))
+    model.add(Dense(24, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])    
+    return model
+
+from keras.wrappers.scikit_learn import KerasClassifier
+model_ANN = KerasClassifier(build_fn=create_model, epochs=10, verbose=1, validation_split=0.4)
+
+import matplotlib.pyplot as plt
+
+
+def plot_graphs(history, string):
+  plt.plot(history.history[string])
+  plt.plot(history.history['val_'+string])
+  plt.xlabel("Epochs")
+  plt.ylabel(string)
+  plt.legend([string, 'val_'+string])
+  plt.show()
+  
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+# Creating Bidirectional LSTM Model
+def create_model(input_length=50):
+    model = Sequential()
+    model.add(Embedding(20000, 64, input_length=50))
+    #model.add(GlobalAveragePooling1D())
+    model.add(Bidirectional(LSTM(100, dropout = 0.2, recurrent_dropout = 0.2)))
+    model.add(Dense(24, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])    
+    return model 
+
+from keras.wrappers.scikit_learn import KerasClassifier
+model_ANN = KerasClassifier(build_fn=create_model, epochs=10, verbose=1, validation_split=0.4)
+
+history = model_ANN.fit(X_train, Y_train)
+
+import matplotlib.pyplot as plt
+
+
+def plot_graphs(history, string):
+  plt.plot(history.history[string])
+  plt.plot(history.history['val_'+string])
+  plt.xlabel("Epochs")
+  plt.ylabel(string)
+  plt.legend([string, 'val_'+string])
+  plt.show()
+  
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+# Creating Stacked LSTM Model
+def create_model(input_length=50):
+    model = Sequential()
+    model.add(Embedding(20000, 64, input_length=50))
+    #model.add(GlobalAveragePooling1D())
+    model.add(Bidirectional(LSTM(100, return_sequences = True)))
+    model.add(Bidirectional(LSTM(100, dropout = 0.2, recurrent_dropout = 0.2)))
+    model.add(Dense(24, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])    
+    return model 
+
+from keras.wrappers.scikit_learn import KerasClassifier
+model_ANN = KerasClassifier(build_fn=create_model, epochs=10, verbose=1, validation_split=0.4)
+
+history = model_ANN.fit(X_train, Y_train)
+
+import matplotlib.pyplot as plt
+
+
+def plot_graphs(history, string):
+  plt.plot(history.history[string])
+  plt.plot(history.history['val_'+string])
+  plt.xlabel("Epochs")
+  plt.ylabel(string)
+  plt.legend([string, 'val_'+string])
+  plt.show()
+  
+plot_graphs(history, "accuracy")
+plot_graphs(history, "loss")
+
+# Example 12.1 AutoEncoder_ Example_1_ANN
+from keras.datasets import mnist
+from keras.models import Sequential, Model
+from keras.layers import Dense
+import numpy as np
+import h5py
+from pathlib import Path
+import matplotlib.pyplot as plt
+import tensorflow as tf
+
+# Read MNIST data. We won't use the y_train or y_test data
+(X_train, _), (X_test, _) = mnist.load_data()
+
+# Cast values into the floating-point type using tf.keras.backend.cast_to_floatx
+X_train = tf.keras.backend.cast_to_floatx(X_train)
+X_test = tf.keras.backend.cast_to_floatx(X_test)
+
+# Normalize the range from [0,255] to [0,1]
+X_train /= 255.
+X_test /= 255.
+
+# Reshape the data into a grid with one row per sample, each row 784 (28*28) pixels
+X_train = X_train.reshape((len(X_train), 784))
+X_test = X_test.reshape((len(X_test), 784))
+
+ann_model = Sequential()
+ann_model.add(Dense(20, input_dim=784, activation='relu'))
+ann_model.add(Dense(784, activation='sigmoid'))
+ann_model.compile(optimizer='adadelta', loss='binary_crossentropy')
+history =  ann_model.fit(X_train, X_train,
+               epochs=50, batch_size=128, shuffle=True,
+               verbose=2,
+               validation_data=(X_test, X_test))
+
+
+predictions = ann_model.predict(X_test)
+print(predictions[0])
+
+ann_model_2 = Sequential()
+ann_model_2.add(Dense(512, input_dim=784, activation='relu'))
+ann_model_2.add(Dense(256, activation='relu'))
+ann_model_2.add(Dense(20, activation='relu'))
+ann_model_2.add(Dense(256, activation='relu'))
+ann_model_2.add(Dense(512, activation='relu'))
+ann_model_2.add(Dense(784, activation='sigmoid'))
+ann_model_2.compile(optimizer='adadelta', loss='binary_crossentropy')
+history2 = ann_model_2.fit(X_train, X_train,
+               epochs=50, batch_size=128, shuffle=True,
+               verbose=2,
+               validation_data=(X_test, X_test))
+predictions2 = ann_model_2.predict(X_test)
+print(predictions[0])
+
+#  Example 12.2 AutoEncoder_ Example_2_CNN
+from keras.models import Sequential, Model
+from keras.layers import Conv2D, Dense, Input, MaxPooling2D, UpSampling2D
+# Instead of from keras.utils import np_utils
+from tensorflow.keras.utils import to_categorical # import to_categorical directly
+from keras.datasets import mnist
+import matplotlib.pyplot as plt
+import numpy as np
+from keras import backend as keras_backend
+from tensorflow.keras import losses, backend as KBE 
+keras_backend.set_image_data_format('channels_last')
+
+# Load the MNIST data. We won't use y_train and y_test data
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+
+
+# cast the sample data to the floating-point type
+#Instead of X_train = keras_backend.cast_to_floatx(X_train) use
+X_train = tf.keras.backend.cast_to_floatx(X_train) # use tf.keras.backend
+X_test = tf.keras.backend.cast_to_floatx(X_test) # use tf.keras.backend
+
+# reshape to 2D grid, one line per image
+X_train = X_train.reshape(X_train.shape[0], 784)
+X_test = X_test.reshape(X_test.shape[0], 784)
+
+# scale data to range [0, 1]
+X_train /= 255.0
+X_test /= 255.0
+
+# reshape sample data to 4D tensor using channels_last convention
+X_train = X_train.reshape(X_train.shape[0], 28, 28, 1)
+X_test = X_test.reshape(X_test.shape[0], 28, 28, 1)
+
+# replace label data with one-hot encoded versions
+y_train = to_categorical(y_train, 10) 
+y_test = to_categorical(y_test, 10)
+
+encoder_layer_1 = Input(shape=(28,28, 1))
+encoder_layer_2 = Conv2D(16, (3, 3), activation='relu', padding='same')
+encoder_layer_3 = MaxPooling2D((2,2), padding='same')
+encoder_layer_4 = Conv2D(8, (3, 3), activation='relu', padding='same')
+encoder_layer_5 = MaxPooling2D((2,2), padding='same')
+encoder_layer_6 = Conv2D(3, (3, 3), activation='relu', padding='same')
+
+decoder_layer_1 = UpSampling2D((2,2))
+decoder_layer_2 = Conv2D(16, (3, 3), activation='relu', padding='same')
+decoder_layer_3 = UpSampling2D((2,2))
+decoder_layer_4 = Conv2D(1, (3, 3), activation='sigmoid', padding='same')
+
+encoder_step_1 = encoder_layer_2(encoder_layer_1)
+encoder_step_2 = encoder_layer_3(encoder_step_1)
+encoder_step_3 = encoder_layer_4(encoder_step_2)
+encoder_step_4 = encoder_layer_5(encoder_step_3)
+encoder_step_5 = encoder_layer_6(encoder_step_4)
+
+decoder_step_1 = decoder_layer_1(encoder_step_5)
+decoder_step_2 = decoder_layer_2(decoder_step_1)
+decoder_step_3 = decoder_layer_3(decoder_step_2)
+decoder_step_4 = decoder_layer_4(decoder_step_3)
+
+
+cnn_model = Model(encoder_layer_1, decoder_step_4)
+cnn_model.compile(optimizer='adadelta', loss='binary_crossentropy')
+history = cnn_model.fit(X_train, X_train,
+               epochs=20, batch_size=128, shuffle=True,
+               verbose=2,
+               validation_data=(X_test, X_test))
+predictions = cnn_model.predict(X_test)
+print(predictions[0])
+
+#  Example 12.3 VAE - Example_3_MNIST Dataset
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
+from keras.layers import Input, Dense, Lambda
+from keras.models import Model
+from keras import objectives
+from keras.datasets import mnist
+
+import h5py
+from pathlib import Path
+from PIL import Image
+
+from keras import backend as KBE
+KBE.set_image_data_format('channels_last')
+
+save_files = False
+
+import os, sys, inspect
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+sys.path.insert(0, os.path.dirname(current_dir)) # path to parent dir
+from DLBasics_Utilities import File_Helper
+file_helper = File_Helper(save_files)
+
+random_seed = 42
+np.random.seed(random_seed)
+
+make_20_small_only = True
+
+
+def get_big_VAE_models(latent_dim):
+    batch_size = 100
+    epsilon_std = 1.0
+    
+    # These routines are part of the model, so we can't use numpy functions.
+    # Instead, we use Keras backend functions that know how to talk to layers
+    # and handle the data coming in and going out
+    
+    def sampling(args):
+        z_mean, z_log_var = args
+        epsilon = KBE.random_normal(shape=(batch_size, latent_dim), mean=0.,
+                                  stddev=epsilon_std)
+        return z_mean + KBE.exp(z_log_var / 2) * epsilon
+    
+    def vae_loss(input_layer, output_layer):
+        image_loss = original_dim * objectives.binary_crossentropy(input_layer, decoder_output)
+        kl_loss = - 0.5 * KBE.sum(1 + z_log_var - KBE.square(z_mean) - KBE.exp(z_log_var), axis=-1)
+        return image_loss + kl_loss
+
+    # build the encoder stage
+    input_layer = Input(batch_shape=(batch_size, original_dim))
+    encoder_hidden_1 = Dense(1000, activation='relu')(input_layer)
+    encoder_hidden_2 = Dense(500, activation='relu')(encoder_hidden_1)
+    encoder_hidden_3 = Dense(250, activation='relu')(encoder_hidden_2)
+    encoder_hidden_4 = Dense(latent_dim, activation='relu')(encoder_hidden_3)
+    
+    # the fancy split and sampling stages
+    z_mean = Dense(latent_dim)(encoder_hidden_4)
+    z_log_var = Dense(latent_dim)(encoder_hidden_4)
+    z = Lambda(sampling, output_shape=(latent_dim,))([z_mean, z_log_var])
+
+    # by saving the decoder layers we can use them again to make the generator
+    decoder_hidden_1 = Dense(250, activation='relu')
+    decoder_hidden_2 = Dense(500, activation='relu')
+    decoder_hidden_3 = Dense(1000, activation='relu')
+    output_layer = Dense(original_dim, activation='sigmoid')
+    
+    # build the decoder stage
+    decoder_stack_1 = decoder_hidden_1(z)
+    decoder_stack_2 = decoder_hidden_2(decoder_stack_1)
+    decoder_stack_3 = decoder_hidden_3(decoder_stack_2)
+    decoder_output = output_layer(decoder_stack_3)
+
+    # build and compile the start-to-finish VAE model
+    VAE = Model(input_layer, decoder_output)
+    VAE.compile(optimizer='adam', loss=vae_loss)
+
+    # save models for the mean and var encoders, and the full VAE encoder stage
+    mean_encoder = Model(input_layer, z_mean)
+    var_encoder = Model(input_layer, z_log_var)
+    encoder = Model(input_layer, z)
+
+    # re-use the decoder layers to build a standalone generator
+    generator_input = Input(shape=(latent_dim,))
+    generator_stack_1 = decoder_hidden_1(generator_input)
+    generator_stack_2 = decoder_hidden_2(generator_stack_1)
+    generator_stack_3 = decoder_hidden_3(generator_stack_2)
+    generator_output = output_layer(generator_stack_3)
+    generator = Model(generator_input, generator_output)
+    
+    weights_filename = 'NB4-VAE_big_weights_only_latent_dim_'+str(latent_dim)
+        
+    return (latent_dim, weights_filename, VAE, encoder, generator)
+
+
+# constants for all models
+original_dim = 784
+batch_size = 100
+
+def get_VAE_models(latent_dim):
+   
+    (latent_dim, weights_filename, VAE, encoder, generator) = get_big_VAE_models(latent_dim)
+    np.random.seed(42)
+    if not file_helper.load_model_weights(VAE, weights_filename):
+        print("No weights file - training the model")
+        np.random.seed(random_seed)
+        number_of_epochs = 25
+        history = VAE.fit(X_train, X_train,
+            shuffle=True,
+            epochs=number_of_epochs,
+            batch_size=batch_size,
+            validation_data=(X_test, X_test))
+        file_helper.save_model_weights(VAE, weights_filename)  
+        
+    return (latent_dim, VAE, encoder, generator)
+
+# Read MNIST data. We won't be using the y_train or y_test data
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+pixels_per_image = np.prod(X_train.shape[1:])
+
+# Cast values into the current floating-point type
+X_train = KBE.cast_to_floatx(X_train)
+X_test = KBE.cast_to_floatx(X_test)
+
+# Normalize the range from [0,255] to [0,1]
+X_train /= 255.
+X_test /= 255.
+
+# Reshape the data into a grid with one row per sample, each row 784 (28*28) pixels
+X_train = X_train.reshape((len(X_train), pixels_per_image))
+X_test = X_test.reshape((len(X_test), pixels_per_image))
+
+print("X_train.shape = ",X_train.shape, " X_test.shape = ",X_test.shape)
+
+(latent_dim, VAE, encoder, generator) = get_VAE_models(30)
+
+print("latent_dim=",latent_dim)
+print("VAE:")
+VAE.summary()
+print("encoder:")
+encoder.summary()
+print("generator:")
+generator.summary()
+
+predictions = VAE.predict(X_test, batch_size=batch_size)
+print(predictions[0])
+
+#  Example 12.4 AutoEncoder Example_4_DENOISING 
+from keras.datasets import mnist
+from keras.models import Sequential, Model
+from keras.layers import Dense, Conv2D, UpSampling2D, MaxPooling2D, Conv2DTranspose # Import directly from keras.layers
+import h5py
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf  # Import tensorflow
+tf.keras.backend.set_image_data_format('channels_last')
+
+def get_mnist_samples():
+    random_seed = 42
+    np.random.seed(random_seed)
+
+    # Read MNIST data. We won't be using the y_train or y_test data
+    (X_train, y_train), (X_test, y_test) = mnist.load_data()
+    pixels_per_image = np.prod(X_train.shape[1:])
+
+    # Cast values into the current floating-point type using tf.cast
+    X_train = tf.cast(X_train, dtype=tf.keras.backend.floatx()) # Use tf.cast
+    X_test = tf.cast(X_test, dtype=tf.keras.backend.floatx())  # Use tf.cast
+    
+    X_train = np.reshape(X_train, (len(X_train), 28, 28, 1)) 
+    X_test = np.reshape(X_test, (len(X_test), 28, 28, 1)) 
+    
+    X_train = tf.cast(X_train, dtype=tf.keras.backend.floatx())
+    X_test = tf.cast(X_test, dtype=tf.keras.backend.floatx())
+    # Normalize the range from [0,255] to [0,1]
+    X_train /= 255.
+    X_test /= 255.
+
+    return (X_train, X_test)
+
+def add_noise_to_mnist(X_train, X_test, noise_factor=0.5): # add noise to the digits
+    X_train_noisy = X_train + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=X_train.shape) 
+    X_test_noisy = X_test + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=X_test.shape) 
+
+    X_train_noisy = np.clip(X_train_noisy, 0., 1.)
+    X_test_noisy = np.clip(X_test_noisy, 0., 1.)
+    return (X_train_noisy, X_test_noisy)
+
+def build_autoencoder1():
+    # build the autoencoder.
+    model = Sequential()
+    model.add(Conv2D(32, (3,3), activation='relu', padding='same', input_shape=(28,28,1)))
+    model.add(MaxPooling2D((2,2,), padding='same'))
+    model.add(Conv2D(32, (3,3), activation='relu', padding='same'))
+    model.add(MaxPooling2D((2,2), padding='same'))
+    # down to 7, 7, 32 now go back up
+    model.add(Conv2D(32, (3,3), activation='relu', padding='same'))
+    model.add(UpSampling2D((2,2)))
+    model.add(Conv2D(32, (3,3), activation='relu', padding='same'))
+    model.add(UpSampling2D((2,2)))
+    model.add(Conv2D(1, (3,3), activation='sigmoid', padding='same'))
+    
+    model.compile(optimizer='adadelta', loss='binary_crossentropy')
+    return model
+
+(X_train, X_test) = get_mnist_samples()
+(X_train_noisy, X_test_noisy) = add_noise_to_mnist(X_train, X_test, 0.5)
+
+model = build_autoencoder1()
+history = model.fit(X_train_noisy, X_train,
+                          epochs=100,
+                          batch_size=128,
+                          shuffle=True,
+                          validation_data=(X_test_noisy, X_test))
+
+
+predictions = model.predict(X_test_noisy)
+print(predictions[0])
+
+# Example 13.1 - RBM [ KNeighborsClassifier ]
+import numpy as np
+from sklearn.datasets import load_digits
+from sklearn import datasets
+from sklearn.neural_network import BernoulliRBM
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import classification_report
+
+import matplotlib.pyplot as plt
+
+# Load a dataset (for this example, we'll use the digits dataset)
+digits = datasets.load_digits()
+X = digits.data
+y = digits.target
+
+# Preprocess the data (you may need different preprocessing for your specific dataset)
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+X_train, X_test, Y_train, Y_test = train_test_split(X, y,test_size=0.2,random_state=42)
+
+knn = KNeighborsClassifier(n_neighbors=7, algorithm='kd_tree')
+
+rbm = BernoulliRBM(n_components=625, learning_rate=0.00001, n_iter=10, verbose=True, random_state=42)
+
+rbm_features_classifier = Pipeline(steps=[("rbm", rbm), ("KNN", knn)])
+# Training RBM-Logistic Pipeline
+rbm_features_classifier.fit(X_train, Y_train)
+
+
+Y_pred = rbm_features_classifier.predict(X_test)
+print(
+    "KNN using RBM features:\n",
+    classification_report(Y_test, Y_pred)
+)
+
+rbm_score = rbm_features_classifier.score(X_test, Y_test)
+print(f"RBM Classification score: {rbm_score}")
+
+# Example 13.2 - RBM[LogisticRegression]
+import numpy as np
+from sklearn.datasets import load_digits
+from sklearn import datasets
+from sklearn.neural_network import BernoulliRBM
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+
+from sklearn.metrics import classification_report
+
+import matplotlib.pyplot as plt
+
+# Load a dataset (for this example, we'll use the digits dataset)
+digits = datasets.load_digits()
+X = digits.data
+y = digits.target
+
+# Preprocess the data (you may need different preprocessing for your specific dataset)
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+X_train, X_test, Y_train, Y_test = train_test_split(X, y,test_size=0.2,random_state=42)
+
+# Initialize the RBM model
+rbm2 = BernoulliRBM(n_components=256, learning_rate=0.01, n_iter=5, verbose=1)
+# Initialize the logistic regression model
+logistic = LogisticRegression(max_iter=100)
+# Create a pipeline that first extracts features using the RBM and then classifies with logistic regression
+rbm_pipeline = Pipeline(steps=[('rbm', rbm2), ('logistic', logistic)])
+# Train the DBN
+rbm_pipeline.fit(X_train, Y_train)
+
+y_pred = rbm_pipeline.predict(X_test)
+print(
+    "LR using RBM features:\n",
+    classification_report(Y_test, y_pred)
+)
+# Evaluate the model on the test set
+rbm_score = rbm_pipeline.score(X_test, Y_test)
+print(f"RBM Classification score: {rbm_score}")
+
+#  Example 14A.1 GAN
+from keras.layers import Dense, Input, Activation, LeakyReLU # Import LeakyReLU directly from keras.layers
+from keras.models import Model
+from keras.optimizers import Adam
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
+data_dimensions = 2
+noise_dimensions = 4
+random_seed = 42
+
+# Training parameters
+batch_size = 32
+number_of_examples = 10000
+number_of_batches = int(number_of_examples / batch_size)
+
+def make_generator(dense_list):
+    generator_input = Input(shape=(noise_dimensions,))
+    generator_dense_layers = []
+    generator_activation_layers = []
+    for i in range(len(dense_list)):
+        if i==0:
+            generator_dense_layers.append(Dense(dense_list[i])(generator_input))
+        else:
+            generator_dense_layers.append(Dense(dense_list[i])(generator_activation_layers[i-1]))
+        generator_activation_layers.append(LeakyReLU(0.1)(generator_dense_layers[i]))
+
+    generator_output = Dense(data_dimensions)(generator_activation_layers[len(dense_list)-1])
+
+    generator = Model(inputs=generator_input, outputs=generator_output)
+    # Generator loss does not matter; Generator will only be trained through GAN
+    generator.compile(loss='mse', optimizer='adam')
+    return generator
+
+def make_discriminator(dense_list):
+    discriminator_input = Input(shape=(data_dimensions,))
+    discriminator_dense_layers = []
+    discriminator_activation_layers = []
+    for i in range(len(dense_list)):
+        if i==0:
+            discriminator_dense_layers.append(Dense(dense_list[i])(discriminator_input))
+        else:
+            discriminator_dense_layers.append(Dense(dense_list[i])(discriminator_activation_layers[i-1]))
+        discriminator_activation_layers.append(LeakyReLU(0.1)(discriminator_dense_layers[i]))
+
+    discriminator_output = Dense(1, activation='sigmoid')(discriminator_activation_layers[len(dense_list)-1])
+
+    discriminator = Model(inputs=discriminator_input, outputs=discriminator_output)
+    discriminator.compile(loss='binary_crossentropy', optimizer='adam')
+    return (discriminator)
+
+def make_gan(generator, discriminator):
+    # When GAN runs, the Generator learns, but the Discriminator does not.
+    # This is because the Generator needs to use the output of the Discriminator.
+    #So, we lock it down when the generator is learning.
+    # We update the discriminator in its own step, using a 'trainable=True' model.
+    discriminator.trainable = False 
+    gan_input = Input(shape=(noise_dimensions,))
+    gan_layer = generator(gan_input)
+    gan_output = discriminator(gan_layer)
+    gan = Model(inputs=gan_input, outputs=gan_output)
+    gan.compile(loss='binary_crossentropy', optimizer=Adam(learning_rate=2e-4))
+    discriminator.trainable = True
+    return(gan)
+
+# The real data we're comparing to
+def get_real_data():
+    real_data = np.random.normal(5, 1, (number_of_examples, data_dimensions))
+    return real_data
+
+def get_batch_of_normal_noise(mean=0, std=1, shape=(batch_size, noise_dimensions)):
+    return np.random.normal(mean, std, shape)
+
+def train_discriminator(discriminator, batch_of_data, label):
+    if label == 0:
+        labels = np.zeros(batch_size).astype(int)
+    else:
+        labels = np.ones(batch_size).astype(int)
+    discriminator_loss = discriminator.train_on_batch(batch_of_data, labels)
+    return discriminator_loss
+
+def train_generator(gan):
+    noise_batch = get_batch_of_normal_noise()
+    labels = np.ones(batch_size).astype(int)
+    gan_loss = gan.train_on_batch(noise_batch, labels)
+    return gan_loss
+
+def pre_train_discriminator(discriminator, generator, real_data):
+    shuffled_data = np.random.permutation(real_data)
+    for batch in range(number_of_batches):
+        # first train on a batch of real data
+        batch_of_data = shuffled_data[batch * batch_size: (batch + 1) * batch_size]
+        train_discriminator(discriminator, batch_of_data, 1)
+        # now train on a batch of fake data
+        noise_batch = get_batch_of_normal_noise()
+        batch_of_data = generator.predict(noise_batch)
+        train_discriminator(discriminator, batch_of_data, 0)
+
+def train_gan_one_epoch(gan, generator, discriminator, real_data):
+    shuffled_data = np.random.permutation(real_data)
+    for batch in range(number_of_batches):
+        # discriminator with real data
+        batch_of_data = shuffled_data[batch * batch_size: (batch + 1) * batch_size]
+        train_discriminator(discriminator, batch_of_data, 1)
+        # generator
+        gan_loss = train_generator(gan)
+        # disriminator with fake data
+        noise_batch = get_batch_of_normal_noise()
+        batch_of_data = generator.predict(noise_batch)
+        discriminator_loss = train_discriminator(discriminator, batch_of_data, 0)
+        # generator
+        gan_loss = train_generator(gan)
+    return((gan_loss, discriminator_loss))
+
+def plot_fake_and_real_data(fig, data, generator, num_points=256):
+    ax = fig.gca()
+    ax.axis('equal')
+
+    noise_batch = get_batch_of_normal_noise(shape=(num_points, noise_dimensions))
+    fake_data_batch = generator.predict(noise_batch)
+    data_batch = data[np.random.randint(number_of_examples, size=num_points)]
+    
+    fake_mean_x = np.mean(fake_data_batch[:,0])
+    fake_mean_y = np.mean(fake_data_batch[:,1])
+    fake_std_x = np.std(fake_data_batch[:,0])
+    fake_std_y = np.std(fake_data_batch[:,1])
+    
+    mean_x = np.mean(data_batch[:,0])
+    mean_y = np.mean(data_batch[:,1])
+    std_x = np.std(data_batch[:,0])
+    std_y = np.std(data_batch[:,1])
+    
+    blue_color = '#2578c7'
+    orange_color = '#fca429'
+
+    c = patches.Ellipse((mean_x, mean_y), 2*std_x, 2*std_y, \
+                        edgecolor=blue_color, fill=False, linewidth=5)
+    ax.add_patch(c)
+    c = patches.Ellipse((mean_x, mean_y), 2*std_x, 2*std_y, \
+                        edgecolor='black', fill=False, linewidth=1)
+    ax.add_patch(c)
+    c = patches.Ellipse((fake_mean_x, fake_mean_y), 2*fake_std_x, 2*fake_std_y, \
+                        edgecolor=orange_color, fill=False, linewidth=5)
+    ax.add_patch(c)
+    c = patches.Ellipse((fake_mean_x, fake_mean_y), 2*fake_std_x, 2*fake_std_y, \
+                        edgecolor='black', fill=False, linewidth=1)
+    ax.add_patch(c)
+    
+    ax.scatter(fake_data_batch[:,0],fake_data_batch[:,1], edgecolor='None', c=orange_color, alpha=0.3)
+    ax.scatter(data_batch[:,0], data_batch[:,1], edgecolor='None', c=blue_color, alpha=0.3)
+
+def get_models():
+    generator = make_generator((16,))
+    discriminator = make_discriminator((16,16))
+    gan = make_gan(generator, discriminator)
+    return (generator, discriminator, gan)
+
+def train_gan():
+    history = []
+    rows = 3
+    columns = 4
+    number_of_epochs = 21
+    plot_epochs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13]
+    plot_number = 0
+    
+    np.random.seed(random_seed)
+    real_data = get_real_data()
+    (generator, discriminator, gan) = get_models()
+    pre_train_discriminator(discriminator, generator, real_data)
+
+    fig = plt.figure(figsize=(10, 8))
+    for epoch in range(number_of_epochs):
+        train_data = train_gan_one_epoch(gan, generator, discriminator, real_data)
+        history.append(train_data)
+        if epoch in plot_epochs:
+            plt.subplot(rows, columns, plot_number+1)
+            plot_fake_and_real_data(fig, real_data, generator)
+            ax = fig.gca()
+            ax.set_xlim(-1, 14)
+            ax.set_ylim(-1, 16)
+            plt.title('Epoch '+str(epoch))
+            plot_number += 1
+    plt.tight_layout()
+    file_helper.save_figure('GAN-2D-learn-plots')
+    plt.show()
+    return np.array(history)
+
+def draw_loss_plots(history):
+    plt.clf()
+    fig = plt.figure(figsize=(8,6))
+    plt.plot(history[:,0], c='#008800', linewidth=2, label='generator loss')
+    plt.plot(history[:,1], c='#aa00aa', linewidth=2, label='discriminator loss')
+    ax = plt.gca()
+    ax.legend(loc='upper right', shadow=True)
+    file_helper.save_figure('GAN-2D-learn-history')
+    plt.show()
+
+history = train_gan()
+
+# Example 15.1  
+# Text Generation
+# Step 1 : Specify Model
+from transformers import pipeline
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+text_generator = pipeline("text-generation", device = device)
+# Step 2: Specify Input
+prompt = "It was a dark and stormy"
+# Step 3: Generate Output
+text_generator(prompt, num_inference_steps = 10)[0][ "generated_text"]          
+
+# Example 15.2
+# Summary Generator
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# model.to(device)
+
+# Step 0: Import Libraries
+!pip install transformers torch gradio
+
+# Step 1 : Specify Model
+from transformers import pipeline
+summarizer = pipeline("summarization", model="Falconsai/text_summarization")
+
+# Step 2: Specify Input
+ARTICLE = """
+Hugging Face: Revolutionizing Natural Language Processing
+Introduction
+In the rapidly evolving field of Natural Language Processing (NLP), Hugging Face has emerged as a prominent and innovative force. This article will explore the story and significance of Hugging Face, a company that has made remarkable contributions to NLP and AI as a whole. From its inception to its role in democratizing AI, Hugging Face has left an indelible mark on the industry.
+The Birth of Hugging Face
+Hugging Face was founded in 2016 by Clément Delangue, Julien Chaumond, and Thomas Wolf. The name "Hugging Face" was chosen to reflect the company's mission of making AI models more accessible and friendly to humans, much like a comforting hug. Initially, they began as a chatbot company but later shifted their focus to NLP, driven by their belief in the transformative potential of this technology.
+Transformative Innovations
+Hugging Face is best known for its open-source contributions, particularly the "Transformers" library. This library has become the de facto standard for NLP and enables researchers, developers, and organizations to easily access and utilize state-of-the-art pre-trained language models, such as BERT, GPT-3, and more. These models have countless applications, from chatbots and virtual assistants to language translation and sentiment analysis.
+Key Contributions:
+1. **Transformers Library:** The Transformers library provides a unified interface for more than 50 pre-trained models, simplifying the development of NLP applications. It allows users to fine-tune these models for specific tasks, making it accessible to a wider audience.
+2. **Model Hub:** Hugging Face's Model Hub is a treasure trove of pre-trained models, making it simple for anyone to access, experiment with, and fine-tune models. Researchers and developers around the world can collaborate and share their models through this platform.
+3. **Hugging Face Transformers Community:** Hugging Face has fostered a vibrant online community where developers, researchers, and AI enthusiasts can share their knowledge, code, and insights. This collaborative spirit has accelerated the growth of NLP.
+Democratizing AI
+Hugging Face's most significant impact has been the democratization of AI and NLP. Their commitment to open-source development has made powerful AI models accessible to individuals, startups, and established organizations. This approach contrasts with the traditional proprietary AI model market, which often limits access to those with substantial resources.
+By providing open-source models and tools, Hugging Face has empowered a diverse array of users to innovate and create their own NLP applications. This shift has fostered inclusivity, allowing a broader range of voices to contribute to AI research and development.
+Industry Adoption
+The success and impact of Hugging Face are evident in its widespread adoption. Numerous companies and institutions, from startups to tech giants, leverage Hugging Face's technology for their AI applications. This includes industries as varied as healthcare, finance, and entertainment, showcasing the versatility of NLP and Hugging Face's contributions.
+Future Directions
+Hugging Face's journey is far from over. As of my last knowledge update in September 2021, the company was actively pursuing research into ethical AI, bias reduction in models, and more. Given their track record of innovation and commitment to the AI community, it is likely that they will continue to lead in ethical AI development and promote responsible use of NLP technologies.
+Conclusion
+Hugging Face's story is one of transformation, collaboration, and empowerment. Their open-source contributions have reshaped the NLP landscape and democratized access to AI. As they continue to push the boundaries of AI research, we can expect Hugging Face to remain at the forefront of innovation, contributing to a more inclusive and ethical AI future. Their journey reminds us that the power of open-source collaboration can lead to groundbreaking advancements in technology and bring AI within the reach of many.
+"""
+
+# Step 3: Generate Summary
+print(summarizer(ARTICLE, max_length=500, min_length=30, do_sample=False))
+# [{'summary_text': 'Hugging Face has emerged as a prominent and innovative force in NLP . From its inception to its role in democratizing AI, the company has left
+ an indelible mark on the industry . The name "Hugging Face" was chosen to reflect the company\'s mission of making AI models more accessible and friendly to humans .'}]  
+
+
+# Example 15.2A
+# Summary Generator 2
+# Step 0: Import Libraries
+!pip install transformers torch gradio
+import gradio as gr
+
+# Step 1: Load the summarization pipeline from Hugging Face Hub
+from transformers import pipeline
+summarizer = pipeline("summarization", model="Falconsai/text_summarization")
+
+# Step 2: Define a function to summarize input text
+def summarize_article(article):
+    summary = summarizer(article, max_length=1000, min_length=30, do_sample=False)
+    return summary[0]['summary_text']
+
+# Step 3: Create Gradio interface
+interface = gr.Interface(fn=summarize_article,
+                         inputs="text",
+                         outputs="text",
+                         title="Text Summarization",
+                         description="Enter a long article and get a summary.")
+
+# Launch the app
+interface.launch()
+
+# Example 4.4
+# Code Generator
+# test_input = "def factorial():"
+
+# Step 0: Import Libraries
+!pip install gradio transformers torch
+import gradio as gr
+import torch
+
+# Step 1:  Load the model and tokenizer
+from transformers import AutoTokenizer, AutoModelForCausalLM
+tokenizer = AutoTokenizer.from_pretrained("Salesforce/codegen-350M-mono")
+model = AutoModelForCausalLM.from_pretrained("Salesforce/codegen-350M-mono")
+
+# Step 1A: Check if CUDA (GPU) is available, else run on CPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+
+# Step 2: Function to generate code using the model
+def generate_code(text):
+    try:
+        # Tokenize input text and move to the correct device
+        input_ids = tokenizer(text, return_tensors="pt").input_ids.to(device)
+
+        # Generate code using the model
+        generated_ids = model.generate(input_ids, max_length=128, num_return_sequences=1)
+
+        # Decode the generated tokens back into text
+        generated_output = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+        return generated_output
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+# Step 3: Create Gradio interface
+interface = gr.Interface(fn=generate_code,
+                         inputs="text",
+                         outputs="text",
+                         title="Code Generation with Salesforce CodeGen",
+                         description="Enter a prompt, and this model will generate Python code based on the input.",
+                         theme="compact")
+
+# Launch the interface
+interface.launch()
+
+# Example 15.3
+
+# Code Generator
+# test_input = "def factorial():"
+
+# Step 0: Import Libraries
+!pip install gradio transformers torch
+import gradio as gr
+import torch
+
+# Step 1:  Load the model and tokenizer
+from transformers import AutoTokenizer, AutoModelForCausalLM
+tokenizer = AutoTokenizer.from_pretrained("Salesforce/codegen-350M-mono")
+model = AutoModelForCausalLM.from_pretrained("Salesforce/codegen-350M-mono")
+
+# Step 1A: Check if CUDA (GPU) is available, else run on CPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+
+# Step 2: Function to generate code using the model
+def generate_code(text):
+    try:
+        # Tokenize input text and move to the correct device
+        input_ids = tokenizer(text, return_tensors="pt").input_ids.to(device)
+
+        # Generate code using the model
+        generated_ids = model.generate(input_ids, max_length=128, num_return_sequences=1)
+
+        # Decode the generated tokens back into text
+        generated_output = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+        return generated_output
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+# Step 3: Create Gradio interface
+interface = gr.Interface(fn=generate_code,
+                         inputs="text",
+                         outputs="text",
+                         title="Code Generation with Salesforce CodeGen",
+                         description="Enter a prompt, and this model will generate Python code based on the input.",
+                         theme="compact")
+
+# Launch the interface
+interface.launch()
+
+# Example 15.4
+# A Basic Chatbot
+
+# Step 0: Import Libraries
+!pip install transformers torch gradio
+# Importing the required libraries
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
+import gradio as gr
+
+# Step 1: Load pre-trained GPT-2 model and tokenizer
+model_name = "gpt2"  # You can change this to other models like gpt2-large
+model = GPT2LMHeadModel.from_pretrained(model_name)
+tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+
+# Step 2: Function to refine the response into a more structured paragraph
+def refine_response(response):
+    # Strip leading/trailing whitespace
+    refined = response.strip()
+
+    # Ensure the first letter is capitalized (simple capitalization fix)
+    if len(refined) > 0:
+        refined = refined[0].upper() + refined[1:]
+
+    # Add a period at the end if there's no punctuation
+    if refined[-1] not in '.!?':
+        refined += '.'
+
+    return refined
+
+# Step 3: Function to generate valid responses from the model
+def generate_response(input_text, model, tokenizer, max_length=100, temperature=0.7, top_p=0.85):
+    # Basic greeting handler for common inputs
+    if input_text.lower() in ["hi", "hello", "hey"]:
+        return "Hello! How can I assist you today?"
+
+    # Check if the input is empty
+    if not input_text.strip():
+        return "Please enter a message."
+
+    # Encode the input and convert it to tensor
+    inputs = tokenizer.encode(input_text, return_tensors="pt")
+
+    # Generate a response using the model
+    outputs = model.generate(inputs,
+                             max_length=max_length,
+                             temperature=temperature,   # Adjust temperature for more coherent responses
+                             top_p=top_p,               # Use top-p sampling to control randomness
+                             top_k=50,                  # Control diversity with top-k
+                             no_repeat_ngram_size=2     # Prevent repetition of phrases
+                             )
+
+    # Decode the generated tokens back into a string
+    raw_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    # Refine the raw response into a cleaner paragraph
+    return refine_response(raw_response)
+
+# Step 4: Define the function that Gradio will use for the interface
+def chatbot(user_input):
+    # Generate a response from the model based on the user's input
+    response = generate_response(user_input, model, tokenizer)
+    return response
+
+# Step 5: Create the Gradio interface
+interface = gr.Interface(fn=chatbot,                         # The function to call for each input
+                         inputs="text",                      # The input type (text box)
+                         outputs="text",                     # The output type (text box)
+                         title="Virtual Assistant",     # Title for the app
+                         description="Ask anything and get responses.",  # Description
+                         theme="compact")                    # A compact theme for the UI
+
+# Launch the Gradio interface with an option to share the app publicly
+interface.launch(share=True)
+
+# Example 15.5
+# Chat with PDF Version 1
+
+# Step 0: Import Libraries
+!pip install gradio
+!pip install pypdf
+import gradio as gr
+from pypdf import PdfReader
+
+# Step 2: Load the Hugging Face model for question answering
+from transformers import pipeline
+qa_model = pipeline("question-answering", model="distilbert-base-uncased-distilled-squad")
+
+# Step 3: Define a Function to extract text from PDF document
+def extract_text_from_pdf(uploaded_file):
+    reader = PdfReader(uploaded_file)
+    text = ""
+    for page in reader.pages:
+        text += page.extract_text() or ""
+    return text
+
+# Step 4: Define a Function to answer questions
+def answer_question(uploaded_file, user_question):
+    # Extract text from the PDF file
+    pdf_text = extract_text_from_pdf(uploaded_file)
+
+    # Get the answer from the question
+    answer = qa_model(question=user_question, context=pdf_text)['answer']
+
+    return answer
+
+# Step 5: Create a Gradio interface using the new components
+iface = gr.Interface(
+    fn=answer_question,
+    inputs=[
+        gr.File(label="Upload PDF"),
+        gr.Textbox(label="Your Question")
+    ],
+    outputs="text",
+    title="Chat with Your PDF",
+    description="Upload a PDF document and ask questions about its content."
+)
+
+# Launch the Gradio app
+iface.launch()
+
+# Example 15.5A
+# Chat with PDF Version 2
+# Example 4.13
+# Chat with PDF Version 2
+
+# Step 0: Import Libraries
+import gradio as gr
+from pypdf import PdfReader
+import nltk
+nltk.download('punkt')
+from nltk.tokenize import sent_tokenize
+
+# Step 1: Load the Hugging Face model for question answering
+from transformers import pipeline
+qa_model = pipeline("question-answering", model="distilbert-base-uncased-distilled-squad")
+
+# Step 2 : Define a function to extract text from PDF
+def extract_text_from_pdf(uploaded_file):
+    reader = PdfReader(uploaded_file)
+    text = ""
+    for page in reader.pages:
+        text += page.extract_text() or ""
+    return text
+
+# Step 3: Define a function to split text into smaller chunks (paragraphs or sentences)
+def split_text_into_chunks(text, max_chunk_size=1000):
+    sentences = sent_tokenize(text)
+    chunks = []
+    chunk = ""
+    for sentence in sentences:
+        if len(chunk) + len(sentence) > max_chunk_size:
+            chunks.append(chunk)
+            chunk = ""
+        chunk += sentence + " "
+    if chunk:
+        chunks.append(chunk)
+    return chunks
+
+# Step 4: Define a function to retrieve the most relevant chunk for the question
+def retrieve_relevant_chunk(chunks, question):
+    best_chunk = ""
+    highest_score = 0
+    for chunk in chunks:
+        result = qa_model(question=question, context=chunk)
+        if result['score'] > highest_score:
+            highest_score = result['score']
+            best_chunk = chunk
+    return best_chunk
+
+# Step 5: Define a function to answer a question using the relevant chunk of text
+def answer_question(uploaded_file, user_question):
+    pdf_text = extract_text_from_pdf(uploaded_file)
+    chunks = split_text_into_chunks(pdf_text)
+    relevant_chunk = retrieve_relevant_chunk(chunks, user_question)
+    answer = qa_model(question=user_question, context=relevant_chunk)['answer']
+    return answer
+
+# Step 6: Create a Gradio interface
+iface = gr.Interface(
+    fn=answer_question,
+    inputs=[
+        gr.File(label="Upload PDF"),
+        gr.Textbox(label="Your Question")
+    ],
+    outputs="text",
+    title="Chat with Your PDF",
+    description="Upload a PDF document and ask questions about its content."
+)
+
+# Launch the Gradio app
+iface.launch()
+
+# Example 15.5B
+# Chat with PDF Version 3
+
+# Step 0: Import Libraries
+import gradio as gr
+from pypdf import PdfReader
+import nltk
+# Download NLTK resources
+nltk.download('punkt')
+from nltk.tokenize import sent_tokenize
+
+# Step 1: Load the Hugging Face models for question answering and summarization
+from transformers import pipeline
+qa_model = pipeline("question-answering", model="distilbert-base-uncased-distilled-squad")
+summarization_model = pipeline("summarization")
+
+# Step 2: Define a function to extract text from PDF
+def extract_text_from_pdf(uploaded_file):
+    reader = PdfReader(uploaded_file)
+    text = ""
+    for page in reader.pages:
+        text += page.extract_text() or ""
+    return text
+
+# Step 3: Define a function to summarize text
+def summarize_text(text):
+    # Split the text into chunks for summarization if needed
+    summaries = summarization_model(text, max_length=130, min_length=30, do_sample=False)
+    return summaries[0]['summary_text']
+
+# Step 4: Define a function to answer a question using the summarized text
+def answer_question(uploaded_file, user_question):
+    pdf_text = extract_text_from_pdf(uploaded_file)
+    if not pdf_text.strip():
+        return "No text found in the PDF. Please upload a valid PDF."
+
+    # Summarize the extracted text
+    summarized_text = summarize_text(pdf_text)
+
+    # Answer the user's question using the summarized text
+    answer = qa_model(question=user_question, context=summarized_text)['answer']
+    return answer
+
+# Step 6: Create a Gradio interface
+iface = gr.Interface(
+    fn=answer_question,
+    inputs=[
+        gr.File(label="Upload PDF"),
+        gr.Textbox(label="Your Question")
+    ],
+    outputs=gr.Textbox(label="Response"),
+    title="Chat with Your PDF",
+    description="Upload a PDF document and ask questions about its content."
+)
+
+# Launch the Gradio app
+iface.launch()
+
+# Example 15.6
+# Conversational AI using Chat Interface
+# Lesson 54, 55
+# Step 1: Import Libraries
+import os
+from openai import OpenAI
+from google.colab import userdata
+import gradio as gr
+
+# Step 2: Do Initialization
+# openai_api_key = userdata.get("OPEN_API_key")
+openai_api_key = userdata.get("cm_muthu")
+openai = OpenAI(api_key = openai_api_key)
+MODEL = "gpt-4o-mini"
+system_message = "You are a helpful assistant"
+
+# Step 3: Define chat() function
+def chat(message, history):
+  messages = [{"role" : "system", "content" : system_message}]
+  for user_message, assistant_message in history:
+    messages.append({"role" : "user", "content" : user_message})
+    messages.append({"role" : "assistant", "content" : assistant_message})
+  messages.append({"role" : "user", "content" : message})
+  stream = openai.chat.completions.create(model = MODEL, messages = messages, stream = True)
+  response = " "
+  for chunk in stream:
+    response += chunk.choices[0].delta.content or ''
+    yield response
+
+gr.ChatInterface(fn = chat).launch()
+
+# Example 15.7
+# Conversational AI using Chat Interface
+# Lesson 54, 55
+# Step 1: Import Libraries
+import os
+from openai import OpenAI
+from google.colab import userdata
+import gradio as gr
+
+# Step 2: Do Initialization
+# openai_api_key = userdata.get("OPEN_API_key")
+openai_api_key = userdata.get("cm_muthu")
+openai = OpenAI(api_key = openai_api_key)
+MODEL = "gpt-4o-mini"
+
+system_message = "You are a helpful assistant in a clothes store. You should try to gently encourage the customer to try items that are on sale. Hats are 60% off, and most other items are 50% off. Encourage the customer to buy hats if they are unsure what to get."
+
+# Step 3: Define chat() function
+def chat(message, history):
+  messages = [{"role" : "system", "content" : system_message}]
+  for user_message, assistant_message in history:
+    messages.append({"role" : "user", "content" : user_message})
+    messages.append({"role" : "assistant", "content" : assistant_message})
+  messages.append({"role" : "user", "content" : message})
+  stream = openai.chat.completions.create(model = MODEL, messages = messages, stream = True)
+  response = " "
+  for chunk in stream:
+    response += chunk.choices[0].delta.content or ''
+    yield response
+
+gr.ChatInterface(fn = chat).launch()
+
+
+# Example 15.8
+# Conversational AI using Chat Interface
+# Lesson 54, 55
+# Step 1: Import Libraries
+import os
+from openai import OpenAI
+from google.colab import userdata
+import gradio as gr
+
+# Step 2: Do Initialization
+# openai_api_key = userdata.get("OPEN_API_key")
+openai_api_key = userdata.get("cm_muthu")
+openai = OpenAI(api_key = openai_api_key)
+MODEL = "gpt-4o-mini"
+
+system_message = "You are a helpful assistant in a clothes store. You should try to gently encourage the customer to try items that are on sale. Hats are 60% off, and most other items are 50% off. Encourage the customer to buy hats if they are unsure what to get."
+
+# Step 3: Define chat() function
+def chat(message, history):
+  messages = [{"role" : "system", "content" : system_message}]
+  for user_message, assistant_message in history:
+    messages.append({"role" : "user", "content" : user_message})
+    messages.append({"role" : "assistant", "content" : assistant_message})
+  messages.append({"role" : "user", "content" : message})
+  if 'belt' in message:
+    messages.append({"role" : "system", "content" : " The store does not sell belts, but be sure to point out that other items are on sale" })
+  stream = openai.chat.completions.create(model = MODEL, messages = messages, stream = True)
+  response = " "
+  for chunk in stream:
+    response += chunk.choices[0].delta.content or ''
+    yield response
+
+gr.ChatInterface(fn = chat).launch()
+
+
+# Example 15.9# Example 4.7
+# Webpage Summarizer : Final Version
+! pip install gradio
+# Step 1: Import Libraries
+from google.colab import userdata
+from openai import OpenAI
+openai_api_key = userdata.get('cm_muthu')
+openai = OpenAI(api_key = openai_api_key)
+import requests # Import the requests library here
+from bs4 import BeautifulSoup
+
+# Step 2 : Define website Class
+class website:
+  url : str
+  title : str
+  text : str
+  def __init__(self, url):
+    self.url = url
+    response = requests.get(url)
+    self.body = response.content
+    soup = BeautifulSoup(self.body, 'html.parser')
+    self.title = soup.title.string if soup.title else "No title found"
+    for irrelevant in soup.body(["script", "style", "img", "input"]):
+      irrelevant.decompose()
+    self.text = soup.body.get_text(separator = "\n", strip = True)
+  def  get_contents(self):
+    return f"Webpage Title:\n{self.title}\n Webpage Contents:\n{self.text}\n\n"
+
+#ws = website("https://anthropic.com")
+#print( ws.get_contents() )
+
+# Step 3: Specify System Prompt
+system_prompt = "You are an assistant that analyzes the contents of a company website" 
+system_prompt += "landing page and creates a short brochure(summary) about the company" 
+system_prompt += "for prospective customers,investors and recruits. Respond in markdown."
+
+# Step 4: Define stream_gpt() function 
+def stream_gpt(prompt):
+    messages = [ {"role" : "system", "content" : system_prompt}, {"role" : "user", "content" : prompt}]
+    stream = openai.chat.completions.create(model = 'gpt-4o-mini' , messages = messages, stream = True)
+    result = " "
+    for chunk in stream:
+        result += chunk.choices[0].delta.content or " "
+    yield result
+
+# Step 5: Define stream_brochure() function
+def stream_brochure(company_name, url ):
+    prompt = f"Please generate a company brochure for {company_name}."
+    prompt += "Here is their landing page: \n"
+    prompt += website(url).get_contents()
+    result = stream_gpt(prompt)
+    for chunk in result:
+      yield chunk
+
+# Step 6: Gradio Interface
+import gradio as gr
+view = gr.Interface(fn=stream_brochure,
+                             inputs=[gr.Textbox(label="Company Name:"), gr.Textbox(label="Landing Page URL: ")],
+                             outputs=gr.Markdown(label="Brochure:"), 
+                             allow_flagging="never")
+# Step 7: Launch Gradio Interface
+view.launch()
+
+
+# Example 15.10
+# Company Brochure Generation
+# FINAL VERSION
+# Step 1: Import Libraries
+import os
+import requests
+import json
+from typing import List
+from bs4 import BeautifulSoup
+from IPython.display import display, Markdown, update_display
+from google.colab import userdata
+from openai import OpenAI
+openai_api_key = userdata.get('cm_muthu')
+openai = OpenAI(api_key = openai_api_key)
+
+# Step 2 : Define website Class
+class website:
+  url : str
+  title : str
+  body : str
+  links : str
+  text : str
+  def __init__(self, url):
+    self.url = url
+    response = requests.get(url)
+    self.body = response.content
+    soup = BeautifulSoup(self.body, 'html.parser')
+    self.title = soup.title.string if soup.title else "No title found"
+    if soup.body:
+      for irrelevant in soup.body(["script", "style", "img", "input"]):
+        irrelevant.decompose()
+      self.text = soup.body.get_text(separator = "\n", strip = True)
+    else:
+      self.text = "No text found"
+    self.links = [link.get('href') for link in soup.find_all('a', href=True)]
+
+  def  get_contents(self):
+    return f"Webpage Title:\n{self.title}\n Webpage Contents:\n {self.text}\n\n"
+
+#ed = website("https://edwarddonner.com")
+#print( ed.get_contents() )
+
+link_system_prompt = "You are provided with a list of links found on a web page."
+link_system_prompt += "You have to decide which of the links would be most relevant"
+link_system_prompt += "to include in a brochure about the company, such as links to an"
+link_system_prompt += "About page, or a company page, or careers/Job pages. \n"
+link_system_prompt += "You should respond in JSON in this example:"
+link_system_prompt += """
+                      {
+                        "links" : [
+                          {
+                            "type" : "about page", "url" : "https://edwarddonner.com/about"
+                          },
+                          {
+                            "type" : "careers page", "url" : "https://edwarddonner.com/careers"
+                          }
+                        ]
+                      }
+                      """
+#print(link_system_prompt)
+
+# Function to form User prompt
+def get_links_user_prompt(website):
+  user_prompt = f"Here is the list of links on the website of {website.url} -"
+  user_prompt += "Please decide which of these are relevant web links for"
+  user_prompt += "a brochure about the company, respond with the full https URL:"
+  user_prompt += "Do not include Terms of Service, Privacy, email links. \n"
+  user_prompt += "Links(some might be relative links): \n"
+  user_prompt += "\n".join(website.links)
+  return user_prompt
+#print(get_links_user_prompt(ed))
+
+# Function to get relevant links
+def get_links(url):
+  website1 = website(url)
+  prompt = get_links_user_prompt(website1)
+  messages = [ {"role" : "system", "content" : link_system_prompt}, {"role" : "user", "content" : prompt}]
+  completion = openai.chat.completions.create(model = 'gpt-4o-mini' , messages = messages, response_format={"type":"json_object"})
+  result = completion.choices[0].message.content
+  return json.loads(result)
+
+#get_links("https://anthropic.com")
+
+# Writing utility function to assemble all details into another prompt
+def get_all_details(url):
+  result = "Landing Page: \n"
+  website1 = website(url)
+  result += website1.get_contents()
+  result += "\n\nRelevant Links: \n"
+  links = get_links(url)
+  print("Found Links:", links)
+  for link in links['links']:
+    result += f"\n\n{link['type']} \n"
+    result += website(link['url']).get_contents()
+
+  return result
+
+#print(get_all_details("https://anthropic.com"))
+
+# Defining System Prompt
+system_prompt = "You are an assistant that analyzes the contents of several relevant pages"
+system_prompt += " from a company website and creates a short brochure(summary) about"
+system_prompt += "the company for prospective customers,investors and recruits. Respond in markdown."
+system_prompt += "Include details of company culture, customers and careers/jobs"
+system_prompt += "if you find relevant links. \n"
+
+# Function to form User Prompt
+def get_brochure_user_prompt(company_name, url):
+  user_prompt = f"You are looking at a company called {company_name}\n"
+  user_prompt += f"Here are the contents of its landing page and other relevant pages;"
+  user_prompt += "use this information to build a short term brochure of this company"
+  user_prompt += get_all_details(url)
+  user_prompt = user_prompt[ :20000]
+  return user_prompt
+
+#get_brochure_user_prompt("Anthropic", "https://anthropic.com")
+
+# Writing Functions to make a Brochure
+def create_brochure(company_name,url):
+  response = openai.chat.completions.create(model = 'gpt-4o-mini', messages = [ {"role" : "system", "content" : system_prompt}, {"role" : "user", "content" : get_brochure_user_prompt(company_name,url)}])
+  result = response.choices[0].message.content
+  display(Markdown(result))
+#create_brochure("Anthropic", "https://anthropic.com")
+
+# Example 16.1
+# Generation of an image based on a text prompt
+!pip install  -q diffusers transformers scipy torch
+
+# Step 1: Load the Stable Diffusion model from Hugging Face
+from diffusers import StableDiffusionPipeline
+pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16)
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu"
+pipe = pipe.to(device)
+
+# Step 2: Define your text prompt
+prompt = "An Astronaut riding a Horse"
+# prompt = "A Car running on a Road"
+
+# Step 3: Generate an image
+image = pipe(prompt).images[0]
+# Save the image
+image.save("generated_image.png")
+# Display the image
+image.show()
+from google.colab import files
+# Download the generated image
+files.download('generated_image.png')
+
+# Example 16.1A
+# Generating the image of a Tourist Spot
+# Step 0
+! pip install gradio
+!pip install pydub
+
+# Step 1
+# Imports
+import gradio as gr
+from io import BytesIO
+from PIL import Image
+import base64
+from pydub import AudioSegment
+from pydub.playback import play
+import IPython.display as ipd
+from openai import OpenAI
+from google.colab import userdata
+openai_api_key = userdata.get('cm_muthu')
+openai = OpenAI(api_key = openai_api_key)
+
+# Step 2: Define a Function to generate an image of a Tourist Spot using DALL-E-3 Model
+def artist(city):
+   image_response = openai.images.generate(model = "dall-e-3",prompt = f"An image representing a vacation in {city}, showing tourist spots and everything unique about {city}, in a vibrant style",size = "1024x1024",n = 1,response_format = "b64_json", )
+   image_base64 = image_response.data[0].b64_json
+   image_data = base64.b64decode(image_base64)
+   return Image.open(BytesIO(image_data))
+
+# Step 3 : Generate an image of a Tourist Spot using DALL-E-3 Model
+image = artist("london")
+display(image)
+
+# Example 16.2
+# Text-to-Image Generation
+# Install the Monster API Python Package
+
+!pip install gradio monsterapi -q
+import gradio as gr
+from monsterapi import client
+# Initialize the Monster API client with your API key
+
+api_key = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6Ijg1OGI0MTIwYzQ0YzZkODI5MjgzZDM0NjFlMWY0YWRhIiwiY3JlYXRlZF9hdCI6IjIwMjQtMTAtMDlUMTQ6MzU6MTcuNTYxMTkwIn0.koOHRCm9xJHZIExKjgSdhIpFL12uOhcApcJyS2DfBKU'  # Replace with your actual Monster API key
+monster_client = client(api_key)
+
+# Define function to generate image
+
+def generate_image(prompt, style):
+    model = 'txt2img'  # Replace with the desired model name
+    input_data = {
+        'prompt': f'{prompt}, {style}',  # Combine prompt and style
+        'negprompt': 'deformed, bad anatomy, disfigured, poorly drawn face, mutation, mutated, extra limb, ugly, disgusting, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blurry, mutated hands, fingers',
+        'samples': 1,
+        'enhance': False,
+        'optimize': False,
+        'safe_filter': True,
+        'steps': 50,
+        'aspect_ratio': 'square',
+        'guidance_scale': 5.5,
+    }
+
+    # Call Monster API to generate image
+    result = monster_client.generate(model, input_data)
+
+    # Return the generated image URL
+    return result['output'][0]
+# Create Gradio interface
+
+with gr.Blocks() as ImageGenerator:
+    gr.Markdown("## Text-to-Image Generator with Monster API")
+
+    prompt_input = gr.Textbox(label="Enter your prompt", placeholder="e.g. a girl in red dress")
+    style_input = gr.Dropdown(
+        choices=["watercolor", "photorealistic", "no style", "enhance", "anime",
+                 "photographic", "digital-art", "comic-book", "fantasy-art",
+                 "analog-film", "neonpunk", "isometric", "lowpoly", "origami",
+                 "line-art", "craft-clay", "cinematic", "3d-model", "pixel-art",
+                 "texture", "futuristic", "realism"],
+        label="Choose a style"
+    )
+    output_image = gr.Image(label="Generated Image")
+
+    generate_btn = gr.Button("Generate Image")
+
+    # Set the function to be called on button click
+    generate_btn.click(fn=generate_image, inputs=[prompt_input, style_input], outputs=output_image)
+
+# Launch the Gradio interface
+ImageGenerator.launch()
+
+
+# Example 16.3
+# Face Mask Detection
+!pip install gradio transformers Pillow
+
+# Use a pipeline as a high-level helper
+from transformers import pipeline
+from PIL import Image
+pipe = pipeline("image-classification", model="AkshatSurolia/ConvNeXt-FaceMask-Finetuned")
+
+# Load model directly
+from transformers import AutoImageProcessor, AutoModelForImageClassification
+
+processor = AutoImageProcessor.from_pretrained("AkshatSurolia/ConvNeXt-FaceMask-Finetuned")
+model = AutoModelForImageClassification.from_pretrained("AkshatSurolia/ConvNeXt-FaceMask-Finetuned")
+
+# Define a function to process and classify the uploaded image
+def classify_image(image):
+    # Convert the image to a format that the model can handle
+    img = Image.fromarray(image)
+
+    # Use the pipeline to predict
+    predictions = pipe(img)
+
+    # Return the top prediction
+    return {pred['label']: pred['score'] for pred in predictions}
+
+import gradio as gr
+# Create a Gradio interface
+iface = gr.Interface(
+    fn=classify_image,  # The function for prediction
+    inputs=gr.Image(type="numpy"),  # Input as an image, Use gr.Image directly
+    outputs="label",  # Output the label and score
+    title="Face Mask Classification",
+    description="Upload an image to classify whether a face is wearing a mask or not using ConvNeXt."
+)
+
+# Launch the interface
+iface.launch()
+
+# Example 16.4
+# Object Detection in an Image
+!pip install gradio transformers torch matplotlib
+import gradio as gr
+from transformers import DetrFeatureExtractor, DetrForObjectDetection
+import torch
+from PIL import Image
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+import numpy as np
+
+# Load the model and feature extractor
+model_name = "facebook/detr-resnet-50"
+feature_extractor = DetrFeatureExtractor.from_pretrained(model_name)
+model = DetrForObjectDetection.from_pretrained(model_name)
+
+# Function to perform object detection and return an image with boxes
+def detect_objects(image):
+    # Prepare the image for the model
+    inputs = feature_extractor(images=image, return_tensors="pt")
+
+    # Perform inference
+    outputs = model(**inputs)
+
+    # Get the detected boxes and labels
+    target_sizes = torch.tensor([image.size[::-1]])  # Model expects (height, width)
+    results = feature_extractor.post_process(outputs, target_sizes=target_sizes)[0]
+
+    # Visualize the results
+    plt.imshow(image)
+    ax = plt.gca()
+
+    for box, score, label in zip(results["boxes"], results["scores"], results["labels"]):
+        if score > 0.9:  # Filter by confidence threshold
+            box = box.detach().numpy()
+            x, y, w, h = box
+            rect = Rectangle((x, y), w - x, h - y, linewidth=2, edgecolor='red', facecolor='none')
+            ax.add_patch(rect)
+            label_text = f"{model.config.id2label[label.item()]}: {round(score.item(), 3)}"
+            plt.text(x, y, label_text, color='white', fontsize=12, bbox=dict(facecolor='red', alpha=0.5))
+
+    plt.axis('off')
+
+    # Save the image with bounding boxes
+    plt.savefig("detected_image.png", bbox_inches='tight')
+    plt.close()
+
+    return Image.open("detected_image.png")
+
+# Gradio interface
+interface = gr.Interface(
+    fn=detect_objects,
+    inputs=gr.Image(type="pil"),
+    outputs=gr.Image(type="pil"),
+    title="Object Detection",
+    description="Upload an image and the model will detect objects with bounding boxes.",
+)
+
+# Launch the app
+interface.launch()
+
+# Example 16.5
+# Image Caption Generation
+#Install the necessary libraries
+
+!pip install transformers
+!pip install gradio
+force_download=True
+# Build the Image Captioning Pipeline
+
+from transformers import pipeline
+image_captioner =pipeline("image-to-text",model="Salesforce/blip-image-captioning-large")
+# Set up Prerequisites for Image Captioning App User Interface
+
+import os
+import io
+import IPython.display
+from PIL import Image
+import base64
+
+import gradio as gr
+
+def image_to_base64_str(pil_image):
+    byte_arr = io.BytesIO()
+    pil_image.save(byte_arr, format='PNG')
+    byte_arr = byte_arr.getvalue()
+    return str(base64.b64encode(byte_arr).decode('utf-8'))
+def captioner(image):
+    base64_image = image_to_base64_str(image)
+    result = image_captioner(base64_image)
+    return result[0]['generated_text']
+
+gr.close_all()
+# Build the Image Captioning App and Launch
+
+ImageCaptionApp = gr.Interface(fn=captioner,
+                    inputs=[gr.Image(label="Upload image", type="pil")],
+                    outputs=[gr.Textbox(label="Caption")],
+                    title="Image Captioning with BLIP",
+                    description="Caption any image using the BLIP model",
+                    allow_flagging="never")
+
+ImageCaptionApp.launch()
+
+# Example 17.1
+# Audio Generation
+!pip install diffusers transformers scipy torch
+
+# Step 1: Define Audio Generation Model
+from transformers import pipeline
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+pipe = pipeline("text-to-audio", model = "facebook/musicgen-small",device=device)
+
+# Step 2: Specify Input
+data = pipe("electric rock solo, very intense")
+
+#  Step 3: Write Code to generate audio & listen to it
+import IPython.display as ipd
+ipd.Audio(data["audio"][0], rate = data["sampling_rate"])
+
+# Example 17.1A
+# Audio Generation using TTS-1 Model
+# Step 0
+
+!pip install pydub
+
+# Step 1
+# Imports
+#import gradio as gr
+#from PIL import Image
+#import base64
+from pydub import AudioSegment
+from pydub.playback import play
+from io import BytesIO
+import IPython.display as ipd
+from openai import OpenAI
+from google.colab import userdata
+openai_api_key = userdata.get('cm_muthu')
+openai = OpenAI(api_key = openai_api_key)
+
+# Step 2: Define a function to generate audio
+def talker (message):
+  response = openai.audio.speech.create(model = "tts-1", voice = "alloy", input = message)
+  audio_stream = BytesIO(response.content)
+  audio = AudioSegment.from_file(audio_stream, format = "mp3")
+  audio.export("audio_output.mp3", format = "mp3")
+  play(audio)
+
+# Step 3: Invoke talker() function
+talker("Ticket Price is 110 dollars")
+
+# Example 17.2
+# Audio-to_Text Conversion
+# Prepare the data
+!pip install transformers
+
+!pip install datasets
+
+# Step 1 : Prepare the input data
+from datasets import load_dataset
+ds = load_dataset("librispeech_asr", split="train.clean.100", streaming=True,trust_remote_code=True )
+# ds = load_dataset("librispeech_asr", split="train.clean.100", streaming=True,)
+
+sample = next(iter(ds))
+array = sample["audio"]["array"]
+sampling_rate = sample["audio"]["sampling_rate"]
+
+# Let us get the sound for first 5 seconds
+array = array[ : sampling_rate * 5]
+
+# Code to listen to the first audio sample in the 100-hour split
+import IPython.display as ipd
+ipd.Audio(data = array, rate = sampling_rate)
+
+# Step 2: Do Speech-to-Text Conversion(Transcription) using Whisper Model
+from transformers import pipeline
+pipe = pipeline("automatic-speech-recognition", model = "openai/whisper-small",max_new_tokens = 200,)
+pipe(array)
+
+
+# Example 17.2A
+# Audio-to_Text Conversion
+# Transcribe a longer(1-minute) audio
+# Prepare the data
+!pip install transformers
+
+!pip install datasets
+
+! pip install genaibook
+
+# Step 1: Specify input data
+from genaibook.core import generate_long_audio
+long_audio = generate_long_audio()
+
+# Step 2: Define Audio Model
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+pipe = pipeline("automatic-speech-recognition", model = "openai/whisper-small", device = device)
+
+# Step 3: Generate Text from Audio
+pipe(long_audio, generate_kwargs = {"task" : "transcribe"},chunk_length_s = 5,batch_size = 8, return_timestamps = True,)# Example 17.2A
+
+
+# Example 17.2B
+# Speech-to_Text Conversion(Transcription) using SpeechT5
+# Prepare the data
+!pip install transformers
+
+!pip install datasets
+
+from datasets import load_dataset
+# ds = load_dataset("librispeech_asr", split="train.clean.100", streaming=True,trust_remote_code=True )
+ds = load_dataset("librispeech_asr", split="train.clean.100", streaming=True,)
+
+sample = next(iter(ds))
+
+array = sample["audio"]["array"]
+sampling_rate = sample["audio"]["sampling_rate"]
+
+from transformers import SpeechT5ForSpeechToText, SpeechT5Processor
+processor = SpeechT5Processor.from_pretrained("microsoft/speecht5_asr")
+model = SpeechT5ForSpeechToText.from_pretrained("microsoft/speecht5_asr")
+
+import torch
+inputs = processor(audio = array, sampling_rate = sampling_rate, return_tensors = "pt")
+with torch.inference_mode():
+   predicted_ids = model.generate(**inputs, max_new_tokens = 70)
+
+transcription = processor.batch_decode(predicted_ids, skip_special_tokens = True)
+print(transcription)
+
+# Example 17.3
+# Text-to_Speech Conversion using SpeechT5_TTS
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+from transformers import SpeechT5ForTextToSpeech, SpeechT5Processor
+
+!pip install genaibook
+
+from genaibook.core import get_speaker_embeddings
+
+processor = SpeechT5Processor.from_pretrained("microsoft/speecht5_tts")
+model = SpeechT5ForTextToSpeech.from_pretrained("microsoft/speecht5_tts")
+
+inputs = processor(text = "There are llamas all around.", return_tensors = "pt")
+
+speaker_embeddings = torch.tensor(get_speaker_embeddings()).unsqueeze(0)
+
+import torch
+with torch.inference_mode():
+   spectrogram = model.generate_speech(inputs["input_ids"], speaker_embeddings)
+plt.figure()
+plt.imshow(np.rot90(np.array(spectrogram)))
+plt.show()
+
+# Generate Speech(i.e., Audio)
+from transformers import SpeechT5HifiGan
+vocoder = SpeechT5HifiGan.from_pretrained("microsoft/speecht5_hifigan")
+with torch.inference_mode():
+   speech = vocoder(spectrogram)
+
+# Code to listen to the generated audio
+import IPython.display as ipd
+ipd.Audio(speech.numpy(), rate=16000)
+
+# Example 17.3A
+# Code to perform Text-to-Speech conversion & Speech-to-Text conversion
+#  Step 1 : Imports
+from IPython.display import Markdown, display, update_display
+from openai import OpenAI
+from google.colab import userdata
+openai_api_key = userdata.get('cm_muthu')
+openai = OpenAI(api_key = openai_api_key)
+import torch
+from io import BytesIO 
+from pydub import AudioSegment
+
+# Step 2: Specify the text to be converted into Audio
+message =  """
+Hugging Face: Revolutionizing Natural Language Processing
+Introduction
+In the rapidly evolving field of Natural Language Processing (NLP), Hugging Face has emerged as a prominent and innovative force. This article will explore the story and significance of Hugging Face, a company that has made remarkable contributions to NLP and AI as a whole. From its inception to its role in democratizing AI, Hugging Face has left an indelible mark on the industry.
+The Birth of Hugging Face
+Hugging Face was founded in 2016 by Clément Delangue, Julien Chaumond, and Thomas Wolf. The name "Hugging Face" was chosen to reflect the company's mission of making AI models more accessible and friendly to humans, much like a comforting hug. Initially, they began as a chatbot company but later shifted their focus to NLP, driven by their belief in the transformative potential of this technology.
+Transformative Innovations
+Hugging Face is best known for its open-source contributions, particularly the "Transformers" library. This library has become the de facto standard for NLP and enables researchers, developers, and organizations to easily access and utilize state-of-the-art pre-trained language models, such as BERT, GPT-3, and more. These models have countless applications, from chatbots and virtual assistants to language translation and sentiment analysis.
+Key Contributions:
+1. **Transformers Library:** The Transformers library provides a unified interface for more than 50 pre-trained models, simplifying the development of NLP applications. It allows users to fine-tune these models for specific tasks, making it accessible to a wider audience.
+2. **Model Hub:** Hugging Face's Model Hub is a treasure trove of pre-trained models, making it simple for anyone to access, experiment with, and fine-tune models. Researchers and developers around the world can collaborate and share their models through this platform.
+3. **Hugging Face Transformers Community:** Hugging Face has fostered a vibrant online community where developers, researchers, and AI enthusiasts can share their knowledge, code, and insights. This collaborative spirit has accelerated the growth of NLP.
+Democratizing AI
+Hugging Face's most significant impact has been the democratization of AI and NLP. Their commitment to open-source development has made powerful AI models accessible to individuals, startups, and established organizations. This approach contrasts with the traditional proprietary AI model market, which often limits access to those with substantial resources.
+By providing open-source models and tools, Hugging Face has empowered a diverse array of users to innovate and create their own NLP applications. This shift has fostered inclusivity, allowing a broader range of voices to contribute to AI research and development.
+Industry Adoption
+The success and impact of Hugging Face are evident in its widespread adoption. Numerous companies and institutions, from startups to tech giants, leverage Hugging Face's technology for their AI applications. This includes industries as varied as healthcare, finance, and entertainment, showcasing the versatility of NLP and Hugging Face's contributions.
+Future Directions
+Hugging Face's journey is far from over. As of my last knowledge update in September 2021, the company was actively pursuing research into ethical AI, bias reduction in models, and more. Given their track record of innovation and commitment to the AI community, it is likely that they will continue to lead in ethical AI development and promote responsible use of NLP technologies.
+Conclusion
+Hugging Face's story is one of transformation, collaboration, and empowerment. Their open-source contributions have reshaped the NLP landscape and democratized access to AI. As they continue to push the boundaries of AI research, we can expect Hugging Face to remain at the forefront of innovation, contributing to a more inclusive and ethical AI future. Their journey reminds us that the power of open-source collaboration can lead to groundbreaking advancements in technology and bring AI within the reach of many.
+"""
+# Step 3: Define a Function to convert above Text into Audio
+def talker (message):
+  # Split the message into smaller chunks if it exceeds the character limit
+  chunk_size = 4000  # Adjust this value as needed
+  chunks = [message[i:i + chunk_size] for i in range(0, len(message), chunk_size)]
+
+  for chunk in chunks:
+    response = openai.audio.speech.create(model = "tts-1", voice = "onyx", input = chunk)
+    audio_stream = BytesIO(response.content) # Use the imported BytesIO
+    audio = AudioSegment.from_file(audio_stream, format = "mp3") # AudioSegment is now accessible
+    with open("audio_output.mp3", "ab") as f:
+        f.write(audio_stream.getbuffer())
+# Now call talker with your message
+talker(message)
+audio_filename = "audio_output.mp3"
+
+# Step 4: Write Code to convert above Audio back to given Text
+audio_file = open(audio_filename, "rb")
+transcription = openai.audio.transcriptions.create(model = AUDIO_MODEL, file = audio_file, response_format = "text")
+print(transcription)
+
+# Example 17.3B
+# Text-to_Speech Conversion using MMS_TTS
+!pip install transformers torch
+
+import torch
+# Step 1: Specify MMS-TTS Model
+from transformers import VitsModel, VitsTokenizer, set_seed
+tokenizer = VitsTokenizer.from_pretrained("facebook/mms-tts-eng")
+model = VitsModel.from_pretrained("facebook/mms-tts-eng")
+
+# Specify Input
+inputs = tokenizer(text = "Hello - my dog is cute", return_tensors = "pt")
+set_seed(555)
+
+# Step 3: Generate Output
+with torch.inference_mode():
+   outputs = model(inputs["input_ids"])
+
+import IPython.display as ipd
+# Access the waveform and sampling rate from the correct keys
+ipd.Audio(data=outputs.waveform[0].cpu().numpy(), rate=model.config.sampling_rate)
+
+# Example 17.4
+# Multimodal AI Assistant(Text, Image, and Audio are generated)
+# Lessons 62
+# Step 0
+! pip install gradio
+!pip install pydub
+
+# Step 1
+# Imports
+import gradio as gr
+from io import BytesIO
+from PIL import Image
+import base64
+from pydub import AudioSegment
+from pydub.playback import play
+import IPython.display as ipd
+from openai import OpenAI
+from google.colab import userdata
+openai_api_key = userdata.get('cm_muthu')
+openai = OpenAI(api_key = openai_api_key)
+
+# Step 1A: Define a function to get ticket price for destination city
+ticket_prices = {"london" : "$799", "paris" : "$899", "tokyo" : "$1400", "berlin" : "$499"}
+def get_ticket_price(destination_city):
+  # print(f"Tool get_ticket_price called for {destination_city}")
+  city = destination_city.lower()
+  return ticket_prices.get(city, "Unknown")
+
+# print(get_ticket_price("london"))
+
+# Step 2: Define a function to generate an image
+def artist(city):
+   image_response = openai.images.generate(model = "dall-e-3",prompt = f"An image representing a vacation in {city}, showing tourist spots and everything unique about {city}, in a vibrant style",size = "1024x1024",n = 1,response_format = "b64_json", )
+   image_base64 = image_response.data[0].b64_json
+   image_data = base64.b64decode(image_base64)
+   return Image.open(BytesIO(image_data))
+# image = artist("london")
+# display(image)
+
+# Step 3: Define a function to generate audio
+def talker (city , price):
+  message = f"Ticket price for {city} is {price}"
+  response = openai.audio.speech.create(model = "tts-1", voice = "onyx", input = message)
+  audio_stream = BytesIO(response.content)
+  audio = AudioSegment.from_file(audio_stream, format = "mp3")
+  audio.export("output.mp3", format = "mp3")
+  play(audio)
+# talker("london" , "$799")
+
+# Step 4: Define generate_output() function
+def generate_output(city_name):
+   ticket_price = get_ticket_price(city_name)
+   message = f"Ticket price for {city_name} is {ticket_price}"
+   image = artist(city_name)
+   talker(city_name , ticket_price)
+   return message , image
+# message, image = generate_output("london")
+# display(image)
+
+# Step 5: Create Gradio Interface
+with gr.Blocks() as interface:
+  destination_city = gr.Textbox(label = "Type Destination City name", placeholder ="e.g.London")
+  ticket_price = gr.Textbox(label = "Ticket Price")
+  destination_city_image = gr.Image(label = "Destination City Image")
+  destination_city.submit(fn = generate_output, inputs = destination_city, outputs = [ticket_price, destination_city_image])
+
+interface.launch()
+
+# Example 18.1  
+# Inpainting - Filling in missing parts of an image based on the surrounding context
+! pip install genaibook
+# Specify Model & Do Initialization
+from genaibook.core import SampleURL, load_image, image_grid
+from diffusers import StableDiffusionXLInpaintPipeline
+import torch
+
+inpaint_pipeline = StableDiffusionXLInpaintPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype = torch.float16, variant = "fp16",).to(device)
+
+img_url = SampleURL.DogBenchImage
+mask_url = SampleURL.DogBenchMask
+init_image = load_image(img_url).convert("RGB").resize((1014,1024))
+mask_image = load_image(mask_url).convert("RGB").resize((1014,1024))
+
+# Specify Input
+prompt = "A majestic tiger sitting on a bench"
+
+# Generate Output
+# Ensure that the width and height are divisible by 8
+width = (init_image.size[0] // 8) * 8  # Adjust width to be divisible by 8
+height = (init_image.size[1] // 8) * 8 # Adjust height to be divisible by 8
+
+image = inpaint_pipeline(prompt = prompt, image = init_image, mask_image = mask_image,
+                        num_inference_steps = 50, strength = 0.80,
+                        width = width, height = height).images[0]
+image_grid([init_image, mask_image, image], rows = 1, cols = 3)
+
+# Example 18.2
+# Prompt Weighting and Image Editing
+from diffusers import DiffusionPipeline
+import torch
+import requests
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # Changed to use CPU
+#device = torch.device("cpu")
+# Increase the timeout for requests
+# timeout is set to 60 seconds here, you can adjust it based on your network speed
+timeout = 60
+
+# Load the model on the CPU instead of the GPU to avoid CUDA out of memory error
+pipeline = DiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", timeout=timeout).to(device)
+
+! pip install compel
+
+from compel import Compel, ReturnedEmbeddingsType
+# Use the penultimate CLIP layer as it is more expressive
+embeddings_type = (ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NON_NORMALIZED)
+
+# Instantiate Compel with text_encoder and tokenizer parameters
+compel = Compel(tokenizer=[pipeline.tokenizer, pipeline.tokenizer_2],
+                text_encoder=[pipeline.text_encoder, pipeline.text_encoder_2],
+                returned_embeddings_type=embeddings_type,
+                requires_pooled=[False, True])
+
+! pip install genaibook
+
+from genaibook.core import image_grid
+# Prepare the Prompts
+prompts = []
+prompts.append("a humanoid robot eating pasta")
+prompts.append("a humanoid++ robot eating pasta") # The + is equavalent to multiplying the prompt weight by 1.1
+prompts.append('["a humanoid robot eating pasta", "a van goghpainting"].and(0.8, 0.2)')
+
+# Making it van gogh!
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu") # Original line - commented out
+#device = torch.device("cpu")  # Force device to be CPU
+images = []
+for prompt in prompts:
+  # Use the same seed across generations
+  generator = torch.Generator(device=device).manual_seed(1) # Generator is now on CPU
+  # The Compel library returns both conditioning vectors & pooled prompt embeds
+  conditioning, pooled = compel(prompt)
+  # We pass the conditioning embeds and pooled prompt embeds to the pipeline
+  image = pipeline(prompt_embeds=conditioning,
+                 pooled_prompt_embeds=pooled,
+                 num_inference_steps=30,
+                 generator=generator,).images[0]
+  images.append(image)
+
+image_grid(images, rows = 1, cols = 3)
+
+  
+# Example 18.3
+# Image Editing with Semantic Guidance
+# Code to generate an image of a photo of the face of a man
+from diffusers import SemanticStableDiffusionPipeline
+import requests
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu") #Original Line - causes error on systems with low GPU memory.
+#device = torch.device("cpu") #forcing the device to be CPU
+
+# Increase the timeout for requests
+# timeout is set to 60 seconds here, you can adjust it based on your network speed
+timeout = 60
+
+# Download the model with an increased timeout
+semantic_pipeline = SemanticStableDiffusionPipeline.from_pretrained(
+    "CompVis/stable-diffusion-v1-4",
+    torch_dtype=torch.float16,
+    variant="fp16",
+    # Add the timeout argument here
+    timeout=timeout
+).to(device)
+
+generator = torch.Generator(device=device).manual_seed(100) #Ensuring generator is on the same device as the model
+out = semantic_pipeline(prompt = "a photo of the face of a man", negative_prompt = "low quality, deformed", generator = generator)
+
+out.images[0]
+
+# Example 18.4
+# Image Editing with Semantic Guidance
+# Code to make the man laugh
+from diffusers import SemanticStableDiffusionPipeline
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+semantic_pipeline = SemanticStableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", torch_dtype = torch.float16, variant = "fp16").to(device)
+generator = torch.Generator(device = device).manual_seed(100)
+
+out = semantic_pipeline(prompt = "a photo of the face of a man",
+                        negative_prompt = "low quality, deformed",
+                        editing_prompt = "smiling, smile",
+                        edit_guidance_scale = 4,
+                        edit_warmup_steps = 10,
+                        edit_threshold = 0.99,
+                        edit_momentum_scale = 0.3,
+                        edit_mom_beta = 0.6,
+                        reverse_editing_direction = False,
+                        generator = generator)
+
+out.images[0]
+
+# Example 18.5
+# Image Editing with Semantic Guidance
+# Code to make the man wear glasses
+from diffusers import SemanticStableDiffusionPipeline
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+semantic_pipeline = SemanticStableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", torch_dtype = torch.float16, variant = "fp16").to(device)
+generator = torch.Generator(device = device).manual_seed(100)
+
+out = semantic_pipeline(prompt = "a photo of the face of a man",
+                        negative_prompt = "low quality, deformed",
+                        editing_prompt = "glasses, wearing glasses",
+                        edit_guidance_scale = 4,
+                        edit_warmup_steps = 10,
+                        edit_threshold = 0.99,
+                        edit_momentum_scale = 0.3,
+                        edit_mom_beta = 0.6,
+                        reverse_editing_direction = False,
+                        generator = generator)
+
+out.images[0]
+
+
+# Example 18.6
+# Image Editing with Semantic Guidance
+# Code to make the man smile and wear glasses
+from diffusers import SemanticStableDiffusionPipeline
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+semantic_pipeline = SemanticStableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", torch_dtype = torch.float16, variant = "fp16").to(device)
+generator = torch.Generator(device = device).manual_seed(100)
+
+out = semantic_pipeline(prompt = "a photo of the face of a man",
+                        negative_prompt = "low quality, deformed",
+                        editing_prompt = ["smiling, smile","glasses, wearing glasses"],
+                        edit_guidance_scale = 4,
+                        edit_warmup_steps = 10,
+                        edit_threshold = 0.99,
+                        edit_momentum_scale = 0.3,
+                        edit_mom_beta = 0.6,
+                        reverse_editing_direction = False,
+                        generator = generator)
+
+out.images[0]
+
+
+# Example 18.7
+# Image Editing via Inversion
+from genaibook.core import SampleURL, load_image, image_grid
+from diffusers import LEditsPPPipelineStableDiffusion
+import torch
+
+# Increase the timeout duration for requests
+timeout = 60  # Set timeout to 60 seconds
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+pipe = LEditsPPPipelineStableDiffusion.from_pretrained(
+    "stable-diffusion-v1-5/stable-diffusion-v1-5",
+    torch_dtype=torch.float16,
+    variant="fp16",
+    # Add the timeout argument here
+    timeout=timeout
+)
+pipe.to(device)
+
+image = load_image(SampleURL.ManInGlasses).convert("RGB")
+# Invert the image, gradually adding noise to it so
+# it can be denoised with modified directions,
+# effectively providing an edit
+pipe.invert(image = image, num_inversion_steps = 50, skip = 0.2)
+
+#Edit the image with an editing prompt
+edited_image = pipe( editing_prompt ="glasses", \
+                     # tell the model to remove the glasses by editing the direction  \
+                     reverse_editing_direction = [True],  \
+                     edit_guidance_scale =[1.5],  \
+                     edit_threshold = [0.95], ).images[0]
+
+image_grid([image, edited_image], rows = 1, cols = 2)
+
+
+# Example 18.8 & 18.9
+# Image Editing using ControlNet Model
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+from diffusers import ControlNetModel, StableDiffusionXLControlNetPipeline
+controlnet = ControlNetModel.from_pretrained(
+                                              "diffusers/controlnet_depth_sdxl-1.0",  \
+                                            torch_dtype = torch.float16, variant ="fp16", \
+                                             ).to(device)
+
+controlnet_pipeline = StableDiffusionXLControlNetPipeline.from_pretrained( \
+                               "stabilityai/stable-diffusion-xl-base-1.0", \
+                               controlnet = controlnet,
+                              torch_dtype = torch.float16, variant =  "fp16", \
+                              ).to(device)
+
+controlnet_pipeline.enable_model_cpu_offload()  # optional, saves VRAM
+controlnet_pipeline.to(device)
+
+!pip install controlnet_aux
+
+# Image Editing using ControlNet Model after preprocessing the image
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+from controlnet_aux import MidasDetector
+
+! pip install genaibook
+
+from PIL import Image
+from genaibook.core import load_image, SampleURL
+original_image = load_image(SampleURL.WomanSpeaking)
+original_image = original_image.resize((1024, 1024))
+
+# loads the MiDAS depth detector model
+midas = MidasDetector.from_pretrained("lllyasviel/Annotators")
+
+# Apply MiDAS depth detection
+processed_image_midas = midas(original_image).resize((1024, 1024), Image.BICUBIC)
+
+image = controlnet_pipeline( \
+          "A colorful, ultra-realistic masked super hero singing a song",  \
+          image = processed_image_midas,  \
+          controlnet_conditionong_scale = 0.4,  \
+          num_inference_steps = 30).images[0]
+
+from genaibook.core import image_grid, load_image, SampleURL
+image_grid([original_image, processed_image_midas, image], rows = 1, cols = 3)
+
+# Example 18.10
+# Image Variation
+import torch
+from diffusers import StableDiffusionXLPipeline
+
+# Assuming you have a GPU, otherwise change to "cpu"
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+
+# Initialize the pipeline 
+sdxl_base_pipeline = StableDiffusionXLPipeline.from_pretrained(
+    "stabilityai/stable-diffusion-xl-base-1.0", 
+    torch_dtype=torch.float16, 
+    variant="fp16",
+)
+sdxl_base_pipeline.to(device) 
+
+# We load the IP-Adapter too
+from PIL import Image
+from genaibook.core import load_image, SampleURL
+from genaibook.core import load_image # Importing the load_image function
+sdxl_base_pipeline.load_ip_adapter("h94/IP-Adapter", subfolder = "sdxl_models", weight_name = "ip-adapter_sdxl.bin")
+# We can set the scale of how strong we want our IP-Adapter to impactour overall result
+sdxl_base_pipeline.set_ip_adapter_scale(0.8)
+image = load_image(SampleURL.ItemsVariation)
+original_image = image.resize((1024, 1024))
+
+# Create the image variation
+generator = torch.Generator(device = device).manual_seed(1)
+variation_image = sdxl_base_pipeline(prompt = " ", ip_adapter_image = original_image, num_inference_steps = 25, generator = generator,).images
+
+# Make sure to import the necessary libraries
+from genaibook.core import image_grid
+from PIL import Image
+image_grid([original_image, variation_image[0]], rows =1, cols = 2)
+
+# Example 18.11
+# Image Prompting
+import torch
+from diffusers import StableDiffusionXLPipeline
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# We load the model and the IP-Adapter
+pipeline = StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype = torch.float16).to(device)
+
+pipeline.load_ip_adapter("h94/IP-Adapter", subfolder = "sdxl_models", weight_name = "ip-adapter_sdxl.bin")
+
+# We are applying the IP-Adapter only to the mid block, which is where it should be mapped to the style in SDXL
+scale = {"up":{"block_0" : [0.0, 1.0, 0.0]}}
+pipeline.set_ip_adapter_scale(scale)
+
+! pip install genaibook
+from PIL import Image
+from genaibook.core import load_image, SampleURL
+image = load_image(SampleURL.Mamoeiro)
+original_image = image.resize((1024,1024))
+
+display(original_image)
+
+# Create the image variation
+! pip install torch
+import torch
+generator = torch.Generator(device = device).manual_seed(1)
+variation_image = pipeline(prompt = "a cat inside of a box", ip_adapter_image = original_image, num_inference_steps = 25, generator = generator,).images
+
+# Make sure to import the necessary libraries
+from genaibook.core import image_grid
+from PIL import Image
+image_grid([original_image, variation_image[0]], rows =1, cols = 2)
+
+# Example 18.12
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+from diffusers import ControlNetModel, StableDiffusionXLControlNetPipeline
+controlnet = ControlNetModel.from_pretrained(
+                                              "diffusers/controlnet-depth-sdxl-1.0",  \
+                                            torch_dtype = torch.float16, variant ="fp16", \
+                                             ).to(device)
+
+controlnet_pipeline = StableDiffusionXLControlNetPipeline.from_pretrained( \
+                               "stabilityai/stable-diffusion-xl-base-1.0", \
+                               controlnet = controlnet,
+                              torch_dtype = torch.float16, variant =  "fp16", \
+                              ).to(device)
+controlnet_pipeline.enable_model_cpu_offload()  # optional, saves VRAM
+controlnet_pipeline.to(device)
+
+!pip install controlnet_aux
+
+from controlnet_aux import MidasDetector
+
+! pip install genaibook
+from PIL import Image
+from genaibook.core import load_image, SampleURL
+
+# loads the MiDAS depth detector model
+midas = MidasDetector.from_pretrained("lllyasviel/Annotators")
+controlnet_pipeline.load_ip_adapter("h94/IP-Adapter", subfolder = "sdxl_models", weight_name = "ip-adapter_sdxl.bin")
+
+# We are applying the IP-Adapter only to the mid block, which is where it should be mapped to the style in SDXL
+scale = {"up":{"block_0" : [0.0, 1.0, 0.0]}}
+controlnet_pipeline.set_ip_adapter_scale(scale)
+
+original_image = load_image(SampleURL.WomanSpeaking)
+original_image = original_image.resize((1024, 1024))
+
+style_image = load_image(SampleURL.Mamoeiro)
+style_image = style_image.resize((1024,1024))
+
+# Apply MiDAS depth detection
+processed_image_midas = midas(original_image).resize((1024, 1024), Image.BICUBIC)
+
+image = controlnet_pipeline("A masked super hero singing a song",image = processed_image_midas,ip_adapter_image = style_image,controlnet_conditionong_scale = 0.5,num_inference_steps = 30).images[0]
+
+from genaibook.core import image_grid, load_image, SampleURL
+image_grid([original_image, style_image, processed_image_midas, image], rows = 1, cols = 4)
+
+# Example 18.13
+# Fine-tuning Diffusion Models using LoRA technique
+! pip install torch
+import torch
+
+from diffusers import StableDiffusionPipeline
+model_id = "Supermaxman/hubble-diffusion-1"
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype = torch.float16,).to(device)
+
+my_prompt = "Hubble reveals a cosmic dance of binary stars: In this stunning new image from "
+my_prompt += "the Hubble Space Telescope, a pair of binary stars orbit each other in a "
+my_prompt += "mesmerizing ballet of gravity and light. The interaction between these two "
+my_prompt += "stellar partners causes them to shine brighter, offering astronomers crucial "
+my_prompt += "insights into the mechanics of dual-star systems."
+
+pipe(my_prompt).images[0]
+
+# Example 18.14
+# Image generation using LoRA fine-tuned Model
+from diffusers import DiffusionPipeline
+from huggingface_hub import model_info
+
+# We will use a classic hand drawn cartoon style
+lora_model_id = "alvdansen/littletinies"
+# Determine the base model
+# This information is frequently in the model card
+# It is "stabilityai/stable-diffusion-xl-base-1.0" in this case
+info = model_info(lora_model_id)
+base_model_id = info.card_data.base_model
+
+# Load the base model
+pipe = DiffusionPipeline.from_pretrained(base_model_id, torch_dtype = torch.float16)
+pipe = pipe.to(device)
+
+# Add the LoRA to the Model
+pipe.load_lora_weights(lora_model_id)
+
+# Add the LoRA to the Model
+pipe.load_lora_weights(lora_model_id)
+
+image = pipe("A llama drinking boba tea",
+                      num_inference_steps = 25,
+                      guidance_scale = 7.5).images[0]
+
+display(image)
+
+
+
+
+
+
+
